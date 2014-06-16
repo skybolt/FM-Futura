@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Workspace
+   version = "1.0">
+   <FileRef
+      location = "group:README.md">
+   </FileRef>
+   <Group
+      location = "group:resources"
+      name = "resources">
+      <Group
+         location = "group:fonts"
+         name = "fonts">
+         <FileRef
+            location = "group:futura.ttf">
+         </FileRef>
+         <FileRef
+            location = "group:futura_condensed_bold-webfont.ttf">
+         </FileRef>
+      </Group>
+      <Group
+         location = "group:images"
+         name = "images">
+         <FileRef
+            location = "group:clear-day.png">
+         </FileRef>
+         <FileRef
+            location = "group:clear-night.png">
+         </FileRef>
+         <FileRef
+            location = "group:cloud-error.png">
+         </FileRef>
+         <FileRef
+            location = "group:cloudy.png">
+         </FileRef>
+         <FileRef
+            location = "group:cold.png">
+         </FileRef>
+         <FileRef
+            location = "group:drizzle.png">
+         </FileRef>
+         <FileRef
+            location = "group:fog.png">
+         </FileRef>
+         <FileRef
+            location = "group:hot.png">
+         </FileRef>
+         <FileRef
+            location = "group:loading1.png">
+         </FileRef>
+         <FileRef
+            location = "group:loading2.png">
+         </FileRef>
+         <FileRef
+            location = "group:loading3.png">
+         </FileRef>
+         <FileRef
+            location = "group:menu_icon_futura.png">
+         </FileRef>
+         <FileRef
+            location = "group:not-available.png">
+         </FileRef>
+         <FileRef
+            location = "group:partly-cloudy-day.png">
+         </FileRef>
+         <FileRef
+            location = "group:partly-cloudy-night.png">
+         </FileRef>
+         <FileRef
+            location = "group:phone_error.png">
+         </FileRef>
+         <FileRef
+            location = "group:rain-sleet.png">
+         </FileRef>
+         <FileRef
+            location = "group:rain-snow.png">
+         </FileRef>
+         <FileRef
+            location = "group:rain.png">
+         </FileRef>
+         <FileRef
+            location = "group:sleet.png">
+         </FileRef>
+         <FileRef
+            location = "group:snow-sleet.png">
+         </FileRef>
+         <FileRef
+            location = "group:snow.png">
+         </FileRef>
+         <FileRef
+            location = "group:thunder.png">
+         </FileRef>
+         <FileRef
+            location = "group:wind.png">
+         </FileRef>
+      </Group>
+   </Group>
+   <Group
+      location = "group:src"
+      name = "src">
+      <FileRef
+         location = "group:config.h">
+      </FileRef>
+      <Group
+         location = "group:js"
+         name = "js">
+         <FileRef
+            location = "group:pebble-js-app.js">
+         </FileRef>
+         <FileRef
+            location = "group:WUpebble-js-app.js">
+         </FileRef>
+      </Group>
+      <FileRef
+         location = "group:main.c">
+      </FileRef>
+      <FileRef
+         location = "group:network.c">
+      </FileRef>
+      <FileRef
+         location = "group:network.h">
+      </FileRef>
+      <FileRef
+         location = "group:weather_layer.c">
+      </FileRef>
+      <FileRef
+         location = "group:weather_layer.h">
+      </FileRef>
+   </Group>
+   <FileRef
+      location = "group:appinfo.json">
+   </FileRef>
+   <FileRef
+      location = "group:wscript">
+   </FileRef>
+</Workspace>
