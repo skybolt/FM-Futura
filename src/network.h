@@ -19,15 +19,15 @@
 #define KEY_ERROR 5
 #define KEY_REQUEST_UPDATE 42
 typedef enum {
-  WEATHER_E_OK = 0,
-  WEATHER_E_DISCONNECTED,
-  WEATHER_E_PHONE,
-  WEATHER_E_NETWORK
+    WEATHER_E_OK = 0,
+    WEATHER_E_DISCONNECTED,
+    WEATHER_E_PHONE,
+    WEATHER_E_NETWORK
 } WeatherError;
 
 typedef struct {
-  int day1_temp;
-  int day1_cond;
+    int day1_temp;
+    int day1_cond;
     int day2_temp;
     int day2_cond;
     int day3_temp;
@@ -38,11 +38,11 @@ typedef struct {
     int day5_temp;
     int day5_cond;
     int day5_time;
-  int sunrise;
-  int sunset;
-  int current_time;
-  time_t updated;
-  WeatherError error;
+    int sunrise;
+    int sunset;
+    int current_time;
+    time_t updated;
+    WeatherError error;
 } WeatherData;
 
 void init_network(WeatherData *weather_data);
