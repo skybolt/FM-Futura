@@ -24,6 +24,9 @@
             location = "group:clear-day.png">
          </FileRef>
          <FileRef
+            location = "group:mostly-cloudy.png">
+         </FileRef>
+         <FileRef
             location = "group:clear-night.png">
          </FileRef>
          <FileRef

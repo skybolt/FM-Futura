@@ -72,7 +72,7 @@ static void handle_tick(struct tm *tick_time, TimeUnits units_changed) {
     // Update the time - Fix to deal with 12 / 24 centering bug
     time_t currentTime = time(0);
     struct tm *currentLocalTime = localtime(&currentTime);
-
+      
     // Manually format the time as 12 / 24 hour, as specified
     strftime(   time_text, 
                 sizeof(time_text), 
@@ -93,24 +93,41 @@ static void handle_tick(struct tm *tick_time, TimeUnits units_changed) {
     snprintf(date_text, sizeof(date_text), "%s %i", day_text, tick_time->tm_mday);
     text_layer_set_text(date_layer, date_text);
   }
+    
+    time_t currentTime = time(0);
+    struct tm *currentLocalTime = localtime(&currentTime);
+    
+    uint32_t nowInt = currentTime;
+    if (debug_flag > 0) {APP_LOG(APP_LOG_LEVEL_DEBUG, "nowInt = %lu", nowInt);}
+    nowInt = nowInt % 86400;
+    if (debug_flag > 0) {    APP_LOG(APP_LOG_LEVEL_DEBUG, "nowInt = %lu", nowInt);}
+    int hourInt = ((nowInt - (nowInt % 3600)) / 3600) * 100;
+    if (debug_flag > 0) {   APP_LOG(APP_LOG_LEVEL_DEBUG, "hourInt = %i", hourInt);}
+    int minuteInt = (nowInt % 3600) / 60;
+        if (debug_flag > 0) {    APP_LOG(APP_LOG_LEVEL_DEBUG, "minuteInt = %i", minuteInt);}
+    int currentInt = hourInt + minuteInt;
+    if (debug_flag > 0) {    APP_LOG(APP_LOG_LEVEL_DEBUG, "currentInt = %i", minuteInt);}
+
 
   // Update the bottom half of the screen: icon and temperature
     
     // Day/night check
     night_time = false;
     day_time = true;
-    if (weather_data->current_time < weather_data->sunrise || weather_data->current_time > weather_data->sunset) {
+//    if (weather_data->current_time < weather_data->sunrise || weather_data->current_time > weather_data->sunset) {
+    if (currentInt < weather_data->sunrise || currentInt > weather_data->sunset) {
         night_time = true;
         day_time = false;
         if (debug_flag > 0) {
-            APP_LOG(APP_LOG_LEVEL_DEBUG, "sunrise %i current time %i sunset %i", weather_data->sunrise, weather_data->current_time, weather_data->sunset);
-        APP_LOG(APP_LOG_LEVEL_DEBUG, "night_time = %i, day_time = %i", night_time, day_time);
-                }
+        //    APP_LOG(APP_LOG_LEVEL_DEBUG, "sunrise %i current time %i sunset %i", weather_data->sunrise, weather_data->current_time, weather_data->sunset);
+            APP_LOG(APP_LOG_LEVEL_DEBUG, "sunrise %i current time %i sunset %i", weather_data->sunrise, currentInt, weather_data->sunset);
+            APP_LOG(APP_LOG_LEVEL_DEBUG, "night_time = %i, day_time = %i", night_time, day_time);
+        }
                 
     } else {
         night_time = false;
         day_time = true;
-        if (debug_flag > 0) {APP_LOG(APP_LOG_LEVEL_DEBUG, "sunrise %i current time %i sunset %i", weather_data->sunrise, weather_data->current_time, weather_data->sunset);
+        if (debug_flag > 0) {APP_LOG(APP_LOG_LEVEL_DEBUG, "sunrise %i current time %i sunset %i", weather_data->sunrise, currentInt, weather_data->sunset);
         APP_LOG(APP_LOG_LEVEL_DEBUG, "night_time = %i, day_time = %i", night_time, day_time);}
                 }
             
