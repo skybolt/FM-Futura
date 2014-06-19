@@ -4,6 +4,7 @@
 #include "weather_layer.h"
 #include "network.h"
 #include "config.h"
+#include "bluetooth.h"
 
 #define TIME_FRAME      (GRect(0, 2, 144, 168-6))
 #define DATE_FRAME      (GRect(1, 66, 144, 168-62))
@@ -15,7 +16,7 @@ static WeatherData *weather_data;
 static Window *window;
 static TextLayer *date_layer;
 static TextLayer *time_layer;
-static WeatherLayer *weather_layer;
+WeatherLayer *weather_layer;
 static WeatherLayer *hourly_left_layer;
 static WeatherLayer *hourly_right_layer;
 static WeatherLayer *forecast_left_layer;
@@ -25,8 +26,11 @@ static Layer *forecast_layer;
 static InverterLayer *day3_inverter_layer;
 static InverterLayer *hourly_inverter_layer;
 
-int window_step = 0;
-int window_time = 0;
+static int window_step = 0;
+static int window_time = 0;
+static int debug_flag = 0;
+static bool night_time = false;
+static bool day_time = true;
 
 static char date_text[] = "XXX 00";
 static char time_text[] = "00:00";
@@ -37,6 +41,7 @@ GFont font_time;
 
 void window_switch(void) {
     window_time = 57;
+    if (debug_flag > 0) {APP_LOG(APP_LOG_LEVEL_DEBUG, "window step was %d, night_time %i, day_time %i", window_step, night_time, day_time);}
     if (window_step == 2) {
         layer_set_hidden(weather_layer, false);
         layer_set_hidden(hourly_layer, true);
@@ -54,16 +59,15 @@ void window_switch(void) {
         window_step = 2;
     }
     //window_step = (window_step + 1) % 6;
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "window step %d", window_step);
+    if (debug_flag > 0) {APP_LOG(APP_LOG_LEVEL_DEBUG, "window step %d, night_time %i, day_time %i", window_step, night_time, day_time);}
 }
 
 void accel_tap_handler(AccelAxisType axis, int32_t direction) {
-    APP_LOG(APP_LOG_LEVEL_INFO, "accl event received");
+    if (debug_flag > 0) {APP_LOG(APP_LOG_LEVEL_INFO, "accl event received");}
     window_switch();
 }
 
-static void handle_tick(struct tm *tick_time, TimeUnits units_changed)
-{
+static void handle_tick(struct tm *tick_time, TimeUnits units_changed) {
   if (units_changed & MINUTE_UNIT) {
     // Update the time - Fix to deal with 12 / 24 centering bug
     time_t currentTime = time(0);
@@ -91,7 +95,27 @@ static void handle_tick(struct tm *tick_time, TimeUnits units_changed)
   }
 
   // Update the bottom half of the screen: icon and temperature
-    bool stale = false;
+    
+    // Day/night check
+    night_time = false;
+    day_time = true;
+    if (weather_data->current_time < weather_data->sunrise || weather_data->current_time > weather_data->sunset) {
+        night_time = true;
+        day_time = false;
+        if (debug_flag > 0) {
+            APP_LOG(APP_LOG_LEVEL_DEBUG, "sunrise %i current time %i sunset %i", weather_data->sunrise, weather_data->current_time, weather_data->sunset);
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "night_time = %i, day_time = %i", night_time, day_time);
+                }
+                
+    } else {
+        night_time = false;
+        day_time = true;
+        if (debug_flag > 0) {APP_LOG(APP_LOG_LEVEL_DEBUG, "sunrise %i current time %i sunset %i", weather_data->sunrise, weather_data->current_time, weather_data->sunset);
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "night_time = %i, day_time = %i", night_time, day_time);}
+                }
+            
+    
+        
     static int animation_step = 0;
   if (weather_data->updated == 0 && weather_data->error == WEATHER_E_OK)
   {
@@ -120,10 +144,11 @@ static void handle_tick(struct tm *tick_time, TimeUnits units_changed)
     animation_step = (animation_step + 1) % 3;
   }
   else {
+      bool stale = false;
     // Update the weather icon and temperature
     if (weather_data->error) {
         stale = true;
-//      weather_layer_set_icon(weather_layer, WEATHER_ICON_PHONE_ERROR);
+        weather_layer_set_icon(weather_layer, WEATHER_ICON_PHONE_ERROR);
     }
     else {
       // Show the temperature as 'stale' if it has not been updated in 30 minutes
@@ -133,7 +158,7 @@ static void handle_tick(struct tm *tick_time, TimeUnits units_changed)
       }
         bool big = false;
         bool small = true;
-        int debug_flag = 0;
+
         if (debug_flag > 0) {
             weather_layer_set_temperature(weather_layer, (rand() % 180) - 50, rand() % 2, big);
             weather_layer_set_temperature(hourly_left_layer, (rand() % 180) - 50, rand() % 2, small);
@@ -141,41 +166,49 @@ static void handle_tick(struct tm *tick_time, TimeUnits units_changed)
         }
         else {
             weather_layer_set_temperature(weather_layer, weather_data->day1_temp, stale, big);
-            weather_layer_set_temperature(hourly_left_layer, weather_data->day2_temp, stale, small);
-            weather_layer_set_temperature(hourly_right_layer, weather_data->day3_temp, stale, small);
             weather_layer_set_temperature(forecast_left_layer, weather_data->day4_temp, stale, small);
             weather_layer_set_temperature(forecast_right_layer, weather_data->day5_temp, stale, small);
+            if (night_time == true) {
+                weather_layer_set_temperature(hourly_left_layer, weather_data->day3_temp, stale, small);
+                weather_layer_set_temperature(hourly_right_layer, weather_data->day2_temp, stale, small);
+            } else if (night_time == false) {
+                weather_layer_set_temperature(hourly_left_layer, weather_data->day2_temp, stale, small);
+                weather_layer_set_temperature(hourly_right_layer, weather_data->day3_temp, stale, small);
+            }
             
         }
 
-      // Day/night check
-        bool night_time = false;
-        bool day_time = true;
-        if (weather_data->current_time < weather_data->sunrise || weather_data->current_time > weather_data->sunset) {
-            night_time = true;
-            day_time = false;
+
         }
-        layer_set_hidden(inverter_layer_get_layer(hourly_inverter_layer), day_time);        
+        layer_set_hidden(inverter_layer_get_layer(hourly_inverter_layer), day_time);
+      if (debug_flag > 0) {APP_LOG(APP_LOG_LEVEL_DEBUG, "set hourly inverter layer hidden = day_time = %i " + day_time);}
         if (debug_flag > 0) {
             weather_layer_set_icon(weather_layer, rand() % 23);
             weather_layer_set_icon(hourly_left_layer, rand() % 23);
             weather_layer_set_icon(hourly_right_layer, rand() % 23);
         }
         else {
-            weather_layer_set_icon(weather_layer, weather_icon_for_condition(weather_data->day1_cond, night_time));
+            if (bluetooth_connection_service_peek() == false) {
+                weather_layer_set_icon(weather_layer, WEATHER_ICON_PHONE_ERROR);
+                window_step = 2;
+                window_switch();
+            }
+            
+            else if (bluetooth_connection_service_peek() == true) {
+                weather_layer_set_icon(weather_layer, weather_icon_for_condition(weather_data->day1_cond, night_time));
+            }
             weather_layer_set_icon(hourly_left_layer, weather_icon_for_condition(weather_data->day2_cond, night_time));
             weather_layer_set_icon(hourly_right_layer, weather_icon_for_condition(weather_data->day3_cond, day_time));
-            weather_layer_set_icon(forecast_left_layer, weather_icon_for_condition(weather_data->day4_cond, night_time));
-            weather_layer_set_icon(forecast_right_layer, weather_icon_for_condition(weather_data->day5_cond, night_time));
+            weather_layer_set_icon(forecast_left_layer, weather_icon_for_condition(weather_data->day4_cond, 0));
+            weather_layer_set_icon(forecast_right_layer, weather_icon_for_condition(weather_data->day5_cond, 0));
         }
         
         //APP_LOG(APP_LOG_LEVEL_INFO, "setting day indicator with %i %i", weather_data->day4_time, weather_data->day5_time);
-        if (debug_flag > -1) {
+        if (debug_flag > 1) {
         weather_layer_set_time(forecast_right_layer, weather_data->day5_time);
         weather_layer_set_time(forecast_left_layer, weather_data->day4_time);
         }
     }
-  }
     
   // Refresh the weather info every 15 minutes
     //window_switch();
@@ -190,7 +223,7 @@ static void handle_tick(struct tm *tick_time, TimeUnits units_changed)
         window_time = 0;
     }
     
-  if (units_changed & MINUTE_UNIT && (tick_time->tm_min % 2) == 0)
+  if (units_changed & MINUTE_UNIT && (tick_time->tm_min % 1) == 0)
   {
     request_weather();
   }
@@ -250,18 +283,20 @@ static void init(void) {
     layer_set_hidden(inverter_layer_get_layer(day3_inverter_layer), false);
     hourly_inverter_layer = inverter_layer_create(GRect(0, 100, 144, 80));
     layer_set_hidden(forecast_layer, true);
-    layer_add_child(window_get_root_layer(window), forecast_layer);
 
     hourly_inverter_layer = inverter_layer_create(GRect(0, 100, 144, 80));
     layer_set_hidden(inverter_layer_get_layer(hourly_inverter_layer), true);
     //layer_add_child(hourly_layer, inverter_layer_get_layer(hourly_inverter_layer));	
     layer_add_child(window_get_root_layer(window), inverter_layer_get_layer(hourly_inverter_layer));
+    layer_add_child(window_get_root_layer(window), forecast_layer);
 	
   // Update the screen right away
   time_t now = time(NULL);
   handle_tick(localtime(&now), SECOND_UNIT | MINUTE_UNIT | HOUR_UNIT | DAY_UNIT );
   // And then every second
+
   tick_timer_service_subscribe(SECOND_UNIT, handle_tick);
+	bluetooth_connection_service_subscribe(&handle_bluetooth);
     accel_tap_service_subscribe(accel_tap_handler);
 }
 

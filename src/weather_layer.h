@@ -47,5 +47,4 @@ void weather_layer_set_icon(WeatherLayer* weather_layer, WeatherIcon icon);
 void weather_layer_set_temperature(WeatherLayer* weather_layer, int16_t temperature, bool is_stale, bool is_small);
 void weather_layer_set_time(WeatherLayer* weather_layer, uint32_t timestamp);
 uint8_t weather_icon_for_condition(int condition, bool night_time);
-
 #endif

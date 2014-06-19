@@ -1,9 +1,10 @@
 //working set version
 #include <pebble.h>
 #include "network.h"
+#include "bluetooth.h"
 int debug_flag = 0;
 
-char *translate_error(AppMessageResult result) {
+/*char *translate_error(AppMessageResult result) {
     switch (result) {
         case APP_MSG_OK: return "APP_MSG_OK";
         case APP_MSG_SEND_TIMEOUT: return "APP_MSG_SEND_TIMEOUT";
@@ -21,10 +22,10 @@ char *translate_error(AppMessageResult result) {
         case APP_MSG_INTERNAL_ERROR: return "APP_MSG_INTERNAL_ERROR";
         default: return "UNKNOWN ERROR";
     }
-}
+}*/
 
 static void appmsg_in_received(DictionaryIterator *received, void *context) {
-    if (debug_flag > 0) {APP_LOG(APP_LOG_LEVEL_DEBUG, "In received."); }
+    if (debug_flag > -1) {APP_LOG(APP_LOG_LEVEL_DEBUG, "In received."); }
     WeatherData *weather = (WeatherData*) context;
     
     Tuple *day1_temp_tuple = dict_find(received, KEY_DAY1_TEMP);
@@ -69,7 +70,6 @@ static void appmsg_in_received(DictionaryIterator *received, void *context) {
     }
     //debug_flag = 1;
     if (debug_flag > 0) {
-        weather->error = WEATHER_E_PHONE;
         APP_LOG(APP_LOG_LEVEL_DEBUG, "Got message with keys... day1_temp=%p day1_cond%p",
                 day1_temp_tuple, day1_cond_tuple);
         APP_LOG(APP_LOG_LEVEL_DEBUG, "Got message with keys... day2_temp=%p day2_cond%p",
@@ -84,7 +84,6 @@ static void appmsg_in_received(DictionaryIterator *received, void *context) {
     }
     
     if (day1_temp_tuple && day1_cond_tuple) {
-        //      if (1 == 1) {
         weather->day1_temp = day1_temp_tuple->value->int32;
         weather->day1_cond = day1_cond_tuple->value->int32;
         weather->day2_temp = day2_temp_tuple->value->int32;
@@ -182,10 +181,9 @@ static void sync_tuple_changed_callback(const uint32_t key, const Tuple* new_tup
 void init_network(WeatherData *weather_data)
 {
     //    app_sync_init(&sync, sync_buffer, sizeof(sync_buffer), initial_values, ARRAY_LENGTH(initial_values), sync_tuple_changed_callback, sync_error_callback, NULL);
-    
+    //    app_message_register_inbox_received(sync_tuple_changed_callback);
     
     app_message_register_inbox_received(appmsg_in_received);
-//    app_message_register_inbox_received(sync_tuple_changed_callback);
     app_message_register_inbox_dropped(appmsg_in_dropped);
     app_message_register_outbox_sent(appmsg_out_sent);
     app_message_register_outbox_failed(appmsg_out_failed);

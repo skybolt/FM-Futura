@@ -50,7 +50,8 @@ WeatherLayer *weather_layer_create(GRect frame, bool is_small)
 
   // Add temperature layer
     if (is_small == false) {
-        APP_LOG(APP_LOG_LEVEL_DEBUG, "creating BIG temp frame");
+        
+    if (debug_flag > 0) {APP_LOG(APP_LOG_LEVEL_DEBUG, "creating BIG temp frame");}
   wld->temp_layer = text_layer_create(GRect(70, 19, 72, 80));
   text_layer_set_background_color(wld->temp_layer, GColorClear);
   text_layer_set_text_alignment(wld->temp_layer, GTextAlignmentCenter);
@@ -187,62 +188,86 @@ void weather_layer_destroy(WeatherLayer* weather_layer) {
  */
 uint8_t weather_icon_for_condition(int c, bool night_time) {
   // Thunderstorm
+    //int debug_saver = debug_flag;
+    //debug_flag = 2;
+    if (c < 1) {
+        if (debug_flag > 0) {APP_LOG(APP_LOG_LEVEL_DEBUG, "WEATHER_ICON_PHONE_ERROR");}
+        return WEATHER_ICON_PHONE_ERROR;
+    }
   if (c < 300) {
-    return WEATHER_ICON_THUNDER;
+      if (debug_flag > 0) {APP_LOG(APP_LOG_LEVEL_DEBUG, "WEATHER_ICON_THUNDER");}
+      return WEATHER_ICON_THUNDER;
   }
   // Drizzle
   else if (c < 500) {
+      if (debug_flag > 0) {APP_LOG(APP_LOG_LEVEL_DEBUG, "WEATHER_ICON_DRIZZLE");}
     return WEATHER_ICON_DRIZZLE;
   }
   // Rain / Freezing rain / Shower rain
   else if (c < 600) {
-    return WEATHER_ICON_RAIN;
+      if (debug_flag > 0) {APP_LOG(APP_LOG_LEVEL_DEBUG, "WEATHER_ICON_RAIN");}
+      return WEATHER_ICON_RAIN;
   }
   // Snow
   else if (c < 700) {
-    return WEATHER_ICON_SNOW;
+      if (debug_flag > 0) {APP_LOG(APP_LOG_LEVEL_DEBUG, "WEATHER_ICON_SNOW");}
+      return WEATHER_ICON_SNOW;
   }
   // Fog / Mist / Haze / etc.
   else if (c < 771) {
-    return WEATHER_ICON_FOG;
+      if (debug_flag > 0) {APP_LOG(APP_LOG_LEVEL_DEBUG, "WEATHER_ICON_FOG");}
+      return WEATHER_ICON_FOG;
   }
   // Tornado / Squalls
   else if (c < 800) {
-    return WEATHER_ICON_WIND;
+      if (debug_flag > 0) {APP_LOG(APP_LOG_LEVEL_DEBUG, "WEATHER_ICON_WIND");}
+      return WEATHER_ICON_WIND;
   }
   // Sky is clear
   else if (c == 800) {
-    if (night_time)
+      if (night_time) {
+      if (debug_flag > 0) {APP_LOG(APP_LOG_LEVEL_DEBUG, "WEATHER_ICON_CLEAR_NIGHT");}
       return WEATHER_ICON_CLEAR_NIGHT;
-    else
-      return WEATHER_ICON_CLEAR_DAY;
+      }
+      else {
+      if (debug_flag > 0) {APP_LOG(APP_LOG_LEVEL_DEBUG, "WEATHER_ICON_CLEAR_DAY");}
+          return WEATHER_ICON_CLEAR_DAY;
   }
-  // few/scattered/broken clouds
-  else if (c < 804) {
-    if (night_time)
-      return WEATHER_ICON_PARTLY_CLOUDY_NIGHT;
-    else
-      return WEATHER_ICON_PARTLY_CLOUDY_DAY;
   }
-  // overcast clouds
-  else if (c == 804) {
-    return WEATHER_ICON_CLOUDY;
+else if (c < 804) {
+      if (night_time) {
+      if (debug_flag > 0) {APP_LOG(APP_LOG_LEVEL_DEBUG, "WEATHER_ICON_PARTLY_CLOUDY_NIGHT");}
+          return WEATHER_ICON_PARTLY_CLOUDY_NIGHT;
+      } else {
+      if (debug_flag > 0) {APP_LOG(APP_LOG_LEVEL_DEBUG, "WEATHER_ICON_PARTLY_CLOUDY_DAY");}
+          return WEATHER_ICON_PARTLY_CLOUDY_DAY;
+      }
+  }
+
+    else if (c == 804) {
+      if (debug_flag > 0) {APP_LOG(APP_LOG_LEVEL_DEBUG, "WEATHER_ICON_CLOUDY");}
+      return WEATHER_ICON_CLOUDY;
     //return WEATHER_ICON_FOG;
   }
   // Extreme
   else if ((c >= 900 && c < 903) || (c > 904 && c < 1000)) {
-    return WEATHER_ICON_WIND;
+      if (debug_flag > 0) {APP_LOG(APP_LOG_LEVEL_DEBUG, "WEATHER_ICON_WIND");}
+      return WEATHER_ICON_WIND;
   }
   // Cold
   else if (c == 903) {
+      if (debug_flag > 0) {APP_LOG(APP_LOG_LEVEL_DEBUG, "WEATHER_ICON_COLD");}
       return WEATHER_ICON_COLD;
   }
   // Hot
   else if (c == 904) {
+      if (debug_flag > 0) {APP_LOG(APP_LOG_LEVEL_DEBUG, "WEATHER_ICON_HOT");}
       return WEATHER_ICON_HOT;
   }
   else {
     // Weather condition not available
-    return WEATHER_ICON_NOT_AVAILABLE;
+      if (debug_flag > 0) {APP_LOG(APP_LOG_LEVEL_DEBUG, "WEATHER_ICON_NOT_AVAILABLE");}
+      return WEATHER_ICON_NOT_AVAILABLE;
   }
+      //debug_flag = debug_saver;
 }

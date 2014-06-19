@@ -1,14 +1,8 @@
-//
-//  bluetooth.h
-//  
-//
-//  Created by skybolt on 6/18/14.
-//
-//
+#pragma once
 
-#ifndef _bluetooth_h
-#define _bluetooth_h
+void layer_set_hidden (Layer *layer, bool hidden);
+void handle_bluetooth(bool);
+void bluetooth_init(bool);
+void bluetooth_deinit(void);
+char *translate_error(AppMessageResult result);
 
-
-
-#endif
