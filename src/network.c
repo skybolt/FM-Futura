@@ -31,10 +31,10 @@ static void appmsg_in_received(DictionaryIterator *received, void *context) {
     if (debug_flag > 0) {
         APP_LOG(APP_LOG_LEVEL_DEBUG, "day2_cond ");
     }
-    /*Tuple *day2_info_tuple = dict_find(received, KEY_DAY2_INFO);
+    Tuple *day2_info_tuple = dict_find(received, KEY_DAY2_INFO);
     if (debug_flag > 0) {
         APP_LOG(APP_LOG_LEVEL_DEBUG, "day2_info ");
-    }*/
+    }
     Tuple *day3_temp_tuple = dict_find(received, KEY_DAY3_TEMP);
     if (debug_flag > 0) {
         APP_LOG(APP_LOG_LEVEL_DEBUG, "day3_temp ");
@@ -43,10 +43,10 @@ static void appmsg_in_received(DictionaryIterator *received, void *context) {
     if (debug_flag > 0) {
         APP_LOG(APP_LOG_LEVEL_DEBUG, "day3_cond ");
     }
-    /*Tuple *day3_info_tuple = dict_find(received, KEY_DAY3_INFO);
+    Tuple *day3_info_tuple = dict_find(received, KEY_DAY3_INFO);
     if (debug_flag > 0) {
         APP_LOG(APP_LOG_LEVEL_DEBUG, "day3_info ");
-    }*/
+    }
     Tuple *day4_temp_tuple = dict_find(received, KEY_DAY4_TEMP);
     if (debug_flag > 0) {
         APP_LOG(APP_LOG_LEVEL_DEBUG, "day4_temp ");

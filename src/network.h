@@ -12,9 +12,11 @@
 
 #define KEY_DAY2_TEMP 20
 #define KEY_DAY2_COND 21
+#define KEY_DAY2_INFO 22
 
 #define KEY_DAY3_TEMP 30
 #define KEY_DAY3_COND 31
+#define KEY_DAY3_INFO 32
 
 #define KEY_DAY4_TEMP 40
 #define KEY_DAY4_COND 41
