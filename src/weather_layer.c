@@ -109,7 +109,7 @@ void weather_layer_set_temperature(WeatherLayer* weather_layer, int16_t t, bool 
             text_layer_set_text_alignment(wld->temp_layer, GTextAlignmentCenter);
             
             // Is the temperature below zero?
-            if (wld->temp_str[0] == '-') { //added line for git
+            if (wld->temp_str[0] == '-') {
                 memmove(
                         wld->temp_str + 1 + 1,
                         wld->temp_str + 1,

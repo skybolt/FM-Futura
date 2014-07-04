@@ -241,7 +241,7 @@ void request_weather()
     if (requests_queued < 11) {
         DictionaryIterator *iter;
         app_message_outbox_begin(&iter);
-        dict_write_uint8(iter, KEY_REQUEST_UPDATE, 42);
+        dict_write_uint8(iter, KEY_REQUEST_UPDATE, 92);
         app_message_outbox_send();
         requests_queued = requests_queued + 1;
         APP_LOG(APP_LOG_LEVEL_DEBUG, "requests_queued = %i", requests_queued);

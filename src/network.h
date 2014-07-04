@@ -1,24 +1,31 @@
 //working set version
 #include <pebble.h>
 
-#define KEY_DAY1_TEMP 10
-#define KEY_DAY1_COND 11
-#define KEY_DAY2_TEMP 20
-#define KEY_DAY2_COND 21
-#define KEY_DAY3_TEMP 30
-#define KEY_DAY3_COND 31
-#define KEY_DAY4_TEMP 40
-#define KEY_DAY4_COND 41
-#define KEY_DAY4_TIME 42
-#define KEY_DAY5_TEMP 50
-#define KEY_DAY5_COND 51
-#define KEY_DAY5_TIME 52
 #define KEY_SUNRISE 2
 #define KEY_SUNSET 3
 #define KEY_CURRENT_TIME 4
 #define KEY_ERROR 5
 #define KEY_LOCATION 6
-#define KEY_REQUEST_UPDATE 42
+
+#define KEY_DAY1_TEMP 10
+#define KEY_DAY1_COND 11
+
+#define KEY_DAY2_TEMP 20
+#define KEY_DAY2_COND 21
+
+#define KEY_DAY3_TEMP 30
+#define KEY_DAY3_COND 31
+
+#define KEY_DAY4_TEMP 40
+#define KEY_DAY4_COND 41
+#define KEY_DAY4_TIME 42
+
+#define KEY_DAY5_TEMP 50
+#define KEY_DAY5_COND 51
+#define KEY_DAY5_TIME 52
+
+#define KEY_REQUEST_UPDATE 92
+
 typedef enum {
     WEATHER_E_OK = 0,
     WEATHER_E_DISCONNECTED,

@@ -50,6 +50,6 @@ void weather_layer_set_temperature(WeatherLayer* weather_layer, int16_t temperat
 void weather_layer_set_time(WeatherLayer* conditions_layer, uint32_t timestamp);
 void weather_layer_set_info(WeatherLayer* conditions_layer, const char *string);
 uint8_t weather_icon_for_condition(int condition, bool night_time);
-void weather_layer_cleanup(void); day
+void weather_layer_cleanup(void); 
 
 #endif
