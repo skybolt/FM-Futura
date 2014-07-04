@@ -49,7 +49,7 @@ void window_switch(void) {
         layer_set_hidden(conditions_layer, false);
         layer_set_hidden(hourly_layer, true);
         layer_set_hidden(forecast_layer, true);
-        display_counter = 2;
+        display_counter = 3;
         window_step = 0;
     } else if (window_step == 0) {
         layer_set_hidden(conditions_layer, true);
