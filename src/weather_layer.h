@@ -1,4 +1,3 @@
-//working set version
 #pragma once
 
 #ifndef WEATHER_LAYER_H

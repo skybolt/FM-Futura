@@ -335,6 +335,7 @@ function fetchOpenweatherHourlyForecast(latitude, longitude) {
                     timestamp = response.list[n].dt;
                     day3_cond = condition;
                     day3_info = pretty_hour;
+                    day3_info = epochToTime(timestamp);
                     console.log("day3_info = " + day3_info);
 
                     updateInProgress = false;
@@ -875,10 +876,10 @@ function sendFMFutura(day1_temp, day1_cond, day2_temp, day2_cond, day2_info, day
 "day1_cond": day1_cond,
 "day2_temp": day2_temp,
 "day2_cond": day2_cond,
-"day2_cond": day2_info,
+"day2_info": day2_info,
 "day3_temp": day3_temp,
 "day3_cond": day3_cond,
-"day3_cond": day3_info,
+"day3_info": day3_info,
 "day4_temp": day4_temp,
 "day4_cond": day4_cond,
 "day4_time": day4_info,

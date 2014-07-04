@@ -1,4 +1,4 @@
-//working set version
+#pragma once
 #include <pebble.h>
 
 #define KEY_SUNRISE 2

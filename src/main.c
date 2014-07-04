@@ -5,6 +5,7 @@
 #include "network.h"
 #include "config.h"
 #include "bluetooth.h"
+#include "main.h"
 
 #define TIME_FRAME      (GRect(0, 2, 144, 168-6))
 #define DATE_FRAME      (GRect(1, 66, 144, 168-62))
@@ -13,6 +14,7 @@
 static WeatherData *weather_data;
 
 /* Global variables to keep track of the UI elements */
+int debug_flag = 0;
 static Window *window;
 static TextLayer *date_layer;
 static TextLayer *time_layer;
@@ -28,7 +30,6 @@ static InverterLayer *hourly_inverter_layer;
 
 static int window_step = 0;
 static int window_time = 0;
-static int debug_flag = 0;
 static bool night_time = false;
 static bool day_time = true;
 
@@ -221,7 +222,7 @@ static void handle_tick(struct tm *tick_time, TimeUnits units_changed) {
                 APP_LOG(APP_LOG_LEVEL_DEBUG, "upd_t %i > curr_tm - %i %i, stale should false, diff %i", delay, updated, time_null, time_null - updated);
             }
 
-            if (debug_flag > 0) {
+            if (debug_flag > 3) {
                 weather_layer_set_temperature(conditions_layer, (rand() % 180) - 50, rand() % 2, big);
                 weather_layer_set_temperature(hourly_left_layer, (rand() % 180) - 50, rand() % 2, small);
                 weather_layer_set_temperature(hourly_right_layer, (rand() % 180) - 50, rand() % 2, small);
@@ -248,7 +249,7 @@ static void handle_tick(struct tm *tick_time, TimeUnits units_changed) {
         if (debug_flag > 0) {
             APP_LOG(APP_LOG_LEVEL_DEBUG, "set hourly inverter layer hidden = day_time = %i " + day_time);
         }
-        if (debug_flag > 0) {
+        if (debug_flag > 3) {
             weather_layer_set_icon(conditions_layer, rand() % 23);
             weather_layer_set_icon(hourly_left_layer, rand() % 23);
             weather_layer_set_icon(hourly_right_layer, rand() % 23);

@@ -1,6 +1,7 @@
 //working set version
 #include <pebble.h>
 #include "weather_layer.h"
+#include "main.h"
 
 static uint8_t WEATHER_ICONS[] = {
     RESOURCE_ID_ICON_CLEAR_DAY,
@@ -27,8 +28,6 @@ static uint8_t WEATHER_ICONS[] = {
     RESOURCE_ID_ICON_LOADING2,
     RESOURCE_ID_ICON_LOADING3,
 };
-
-static int debug_flag = 0;
 
 // Keep pointers to the two fonts we use.
 static GFont large_font, small_font, tiny_font;
@@ -214,8 +213,7 @@ void weather_layer_destroy(WeatherLayer* weather_layer) {
 
 uint8_t weather_icon_for_condition(int c, bool night_time) {
     // Thunderstorm
-    //int debug_saver = debug_flag;
-    //debug_flag = 2;
+
     if (c < 1) {
         if (debug_flag > 0) {
             APP_LOG(APP_LOG_LEVEL_DEBUG, "WEATHER_ICON_CLOUD_ERROR");
@@ -327,5 +325,4 @@ uint8_t weather_icon_for_condition(int c, bool night_time) {
         }
         return WEATHER_ICON_NOT_AVAILABLE;
     }
-    //debug_flag = debug_saver;
 }

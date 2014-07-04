@@ -1,8 +1,8 @@
-// "c" for temperature in Celsius
-// "f" for temperature in Fahrenheit
 #pragma once
 
 int epochToHourMin(int epoch);
+
+int debug_flag;
 //int display_counter;
 
 //int requests_queued;

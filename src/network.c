@@ -2,7 +2,7 @@
 #include <pebble.h>
 #include "network.h"
 #include "bluetooth.h"
-int debug_flag = 0;
+#include "main.h"
 int requests_queued = 0;
 
 static void appmsg_in_received(DictionaryIterator *received, void *context) {
@@ -92,17 +92,15 @@ static void appmsg_in_received(DictionaryIterator *received, void *context) {
         APP_LOG(APP_LOG_LEVEL_DEBUG, "error_tuple ");
     }
 
-
-    //int debug_flag = 1;
     if (debug_flag > 0) {
         APP_LOG(APP_LOG_LEVEL_DEBUG, "dictionary iteration complete");
 
         APP_LOG(APP_LOG_LEVEL_DEBUG, "Got message with keys... day1_temp=%p day1_cond%p",
                 day1_temp_tuple, day1_cond_tuple);
-        APP_LOG(APP_LOG_LEVEL_DEBUG, "Got message with keys... day2_temp=%p day2_cond%p",
-                day2_temp_tuple, day2_cond_tuple);
-        APP_LOG(APP_LOG_LEVEL_DEBUG, "Got message with keys... day3_temp=%p day3_cond%p",
-                day3_temp_tuple, day3_cond_tuple);
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "Got message with keys... day2_temp=%p day2_cond%p day2_info=%p",
+                day2_temp_tuple, day2_cond_tuple, day2_info_tuple);
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "Got message with keys... day3_temp=%p day3_cond%p day3_info=%p",
+                day3_temp_tuple, day3_cond_tuple, day3_info_tuple);
         APP_LOG(APP_LOG_LEVEL_DEBUG, "Got message with keys... day4_temp=%p day4_cond%p day4_time=%p",
                 day4_temp_tuple, day4_cond_tuple, day4_time_tuple);
         APP_LOG(APP_LOG_LEVEL_DEBUG, "Got message with keys... day5_temp=%p day5_cond%p day5_time=%p",
@@ -116,10 +114,10 @@ static void appmsg_in_received(DictionaryIterator *received, void *context) {
         weather->day1_cond = day1_cond_tuple->value->int32;
         weather->day2_temp = day2_temp_tuple->value->int32;
         weather->day2_cond = day2_cond_tuple->value->int32;
-//        weather->day2_info = day2_info_tuple->value->cstring;
+        weather->day2_info = day2_info_tuple->value->cstring;
         weather->day3_temp = day3_temp_tuple->value->int32;
         weather->day3_cond = day3_cond_tuple->value->int32;
-//        weather->day3_info = day3_info_tuple->value->cstring;
+        weather->day3_info = day3_info_tuple->value->cstring;
         weather->day4_temp = day4_temp_tuple->value->int32;
         weather->day4_cond = day4_cond_tuple->value->int32;
         weather->day4_time = day4_time_tuple->value->int32;
@@ -134,8 +132,8 @@ static void appmsg_in_received(DictionaryIterator *received, void *context) {
         weather->updated = time(NULL);
         if (debug_flag > 0) {
             APP_LOG(APP_LOG_LEVEL_DEBUG, "before if day 1 temperature %i and condition %i", weather->day1_temp, weather->day1_cond);
-            APP_LOG(APP_LOG_LEVEL_DEBUG, "before if day 2 temperature %i and condition %i", weather->day2_temp, weather->day2_cond);
-            APP_LOG(APP_LOG_LEVEL_DEBUG, "before if day 3 temperature %i and condition %i", weather->day3_temp, weather->day3_cond);
+            APP_LOG(APP_LOG_LEVEL_DEBUG, "before if day 2 temperature %i and condition %i, info %s", weather->day2_temp, weather->day2_cond, weather->day2_info);
+            APP_LOG(APP_LOG_LEVEL_DEBUG, "before if day 3 temperature %i and condition %i, info %s", weather->day3_temp, weather->day3_cond, weather->day3_info);
             APP_LOG(APP_LOG_LEVEL_DEBUG, "before if day 4 temperature %i and condition %i and time %i", weather->day4_temp, weather->day4_cond, weather->day4_time);
             APP_LOG(APP_LOG_LEVEL_DEBUG, "before if day 5 temperature %i and condition %i and time %i", weather->day5_temp, weather->day5_cond, weather->day5_time);
             APP_LOG(APP_LOG_LEVEL_DEBUG, "before if astro location %s", weather->location);
