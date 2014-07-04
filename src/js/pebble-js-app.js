@@ -334,8 +334,9 @@ function fetchOpenweatherHourlyForecast(latitude, longitude) {
                     condition = response.list[n].weather[0].id;
                     timestamp = response.list[n].dt;
                     day3_cond = condition;
+                    epochToTime(timestamp);
                     day3_info = pretty_hour;
-                    day3_info = epochToTime(timestamp);
+//                    day3_info = epochToTime(timestamp);
                     console.log("day3_info = " + day3_info);
 
                     updateInProgress = false;
