@@ -277,9 +277,13 @@ static void handle_tick(struct tm *tick_time, TimeUnits units_changed) {
         //display_counter = 4;
         if (display_counter > 1) {
             weather_layer_set_info(conditions_layer, weather_data->location);
+            weather_layer_set_info(hourly_left_layer, weather_data->day2_info);
+            weather_layer_set_info(hourly_right_layer, weather_data->day3_info);
             display_counter = display_counter - 1;
         } else if (display_counter == 1) {
-            weather_layer_set_info(conditions_layer, "  ");
+            weather_layer_set_info(conditions_layer, " ");
+            weather_layer_set_info(hourly_left_layer, " ");
+            weather_layer_set_info(hourly_right_layer, " ");
         }
 
         if (debug_flag > 1) {
