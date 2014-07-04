@@ -54,7 +54,8 @@ void window_switch(void) {
     } else if (window_step == 0) {
         layer_set_hidden(conditions_layer, true);
         layer_set_hidden(hourly_layer, false);
-        layer_set_hidden(forecast_layer, true);
+        layer_set_hidden(forecast_layer, true);\
+        display_counter = 2;
         window_step = 1;
     } else if (window_step == 1) {
         layer_set_hidden(conditions_layer, true);
