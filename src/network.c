@@ -3,28 +3,13 @@
 #include "network.h"
 #include "bluetooth.h"
 int debug_flag = 0;
-
-/*char *translate_error(AppMessageResult result) {
-    switch (result) {
-        case APP_MSG_OK: return "APP_MSG_OK";
-        case APP_MSG_SEND_TIMEOUT: return "APP_MSG_SEND_TIMEOUT";
-        case APP_MSG_SEND_REJECTED: return "APP_MSG_SEND_REJECTED";
-        case APP_MSG_NOT_CONNECTED: return "APP_MSG_NOT_CONNECTED";
-        case APP_MSG_APP_NOT_RUNNING: return "APP_MSG_APP_NOT_RUNNING";
-        case APP_MSG_INVALID_ARGS: return "APP_MSG_INVALID_ARGS";
-        case APP_MSG_BUSY: return "APP_MSG_BUSY";
-        case APP_MSG_BUFFER_OVERFLOW: return "APP_MSG_BUFFER_OVERFLOW";
-        case APP_MSG_ALREADY_RELEASED: return "APP_MSG_ALREADY_RELEASED";
-        case APP_MSG_CALLBACK_ALREADY_REGISTERED: return "APP_MSG_CALLBACK_ALREADY_REGISTERED";
-        case APP_MSG_CALLBACK_NOT_REGISTERED: return "APP_MSG_CALLBACK_NOT_REGISTERED";
-        case APP_MSG_OUT_OF_MEMORY: return "APP_MSG_OUT_OF_MEMORY";
-        case APP_MSG_CLOSED: return "APP_MSG_CLOSED";
-        case APP_MSG_INTERNAL_ERROR: return "APP_MSG_INTERNAL_ERROR";
-        default: return "UNKNOWN ERROR";
-    }
-}*/
+int requests_queued = 0;
 
 static void appmsg_in_received(DictionaryIterator *received, void *context) {
+    int saver = debug_flag;
+    debug_flag = 2;
+    requests_queued = 0;
+    display_counter = 3;
     if (debug_flag > -1) {
         APP_LOG(APP_LOG_LEVEL_DEBUG, "In received.");
     }
@@ -46,6 +31,10 @@ static void appmsg_in_received(DictionaryIterator *received, void *context) {
     if (debug_flag > 0) {
         APP_LOG(APP_LOG_LEVEL_DEBUG, "day2_cond ");
     }
+    /*Tuple *day2_info_tuple = dict_find(received, KEY_DAY2_INFO);
+    if (debug_flag > 0) {
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "day2_info ");
+    }*/
     Tuple *day3_temp_tuple = dict_find(received, KEY_DAY3_TEMP);
     if (debug_flag > 0) {
         APP_LOG(APP_LOG_LEVEL_DEBUG, "day3_temp ");
@@ -54,6 +43,10 @@ static void appmsg_in_received(DictionaryIterator *received, void *context) {
     if (debug_flag > 0) {
         APP_LOG(APP_LOG_LEVEL_DEBUG, "day3_cond ");
     }
+    /*Tuple *day3_info_tuple = dict_find(received, KEY_DAY3_INFO);
+    if (debug_flag > 0) {
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "day3_info ");
+    }*/
     Tuple *day4_temp_tuple = dict_find(received, KEY_DAY4_TEMP);
     if (debug_flag > 0) {
         APP_LOG(APP_LOG_LEVEL_DEBUG, "day4_temp ");
@@ -90,6 +83,10 @@ static void appmsg_in_received(DictionaryIterator *received, void *context) {
     if (debug_flag > 0) {
         APP_LOG(APP_LOG_LEVEL_DEBUG, "current_time_tuple ");
     }
+    Tuple *location_tuple = dict_find(received, KEY_LOCATION);
+    if (debug_flag > 0) {
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "location_tuple ");
+    }
     Tuple *error_tuple = dict_find(received, KEY_ERROR);
     if (debug_flag > 0) {
         APP_LOG(APP_LOG_LEVEL_DEBUG, "error_tuple ");
@@ -99,11 +96,7 @@ static void appmsg_in_received(DictionaryIterator *received, void *context) {
     //int debug_flag = 1;
     if (debug_flag > 0) {
         APP_LOG(APP_LOG_LEVEL_DEBUG, "dictionary iteration complete");
-        APP_LOG(APP_LOG_LEVEL_DEBUG, "Got message with unknown keys... day1_temp=%p day1_cond=%p day2_temp=%p day2_cond=%p day3_temp=%p day3_cond=%p day4_temp=%p day4_cond=%p day4_info=%p day5_temp=%p day5_cond=%p day5_info=%p error=%p", day1_temp_tuple, day1_cond_tuple, day2_temp_tuple, day2_cond_tuple, day3_temp_tuple, day3_cond_tuple, day4_temp_tuple, day4_cond_tuple, day4_time_tuple, day5_temp_tuple, day5_cond_tuple, day5_time_tuple, error_tuple);
 
-    }
-    //debug_flag = 1;
-    if (debug_flag > 0) {
         APP_LOG(APP_LOG_LEVEL_DEBUG, "Got message with keys... day1_temp=%p day1_cond%p",
                 day1_temp_tuple, day1_cond_tuple);
         APP_LOG(APP_LOG_LEVEL_DEBUG, "Got message with keys... day2_temp=%p day2_cond%p",
@@ -114,6 +107,7 @@ static void appmsg_in_received(DictionaryIterator *received, void *context) {
                 day4_temp_tuple, day4_cond_tuple, day4_time_tuple);
         APP_LOG(APP_LOG_LEVEL_DEBUG, "Got message with keys... day5_temp=%p day5_cond%p day5_time=%p",
                 day5_temp_tuple, day5_cond_tuple, day5_time_tuple);
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "Got message with keys... location=%p", location_tuple);
         APP_LOG(APP_LOG_LEVEL_DEBUG, "Got message with keys... error=%p", error_tuple);
     }
 
@@ -122,8 +116,10 @@ static void appmsg_in_received(DictionaryIterator *received, void *context) {
         weather->day1_cond = day1_cond_tuple->value->int32;
         weather->day2_temp = day2_temp_tuple->value->int32;
         weather->day2_cond = day2_cond_tuple->value->int32;
+//        weather->day2_info = day2_info_tuple->value->cstring;
         weather->day3_temp = day3_temp_tuple->value->int32;
         weather->day3_cond = day3_cond_tuple->value->int32;
+//        weather->day3_info = day3_info_tuple->value->cstring;
         weather->day4_temp = day4_temp_tuple->value->int32;
         weather->day4_cond = day4_cond_tuple->value->int32;
         weather->day4_time = day4_time_tuple->value->int32;
@@ -133,6 +129,7 @@ static void appmsg_in_received(DictionaryIterator *received, void *context) {
         weather->sunrise = sunrise_tuple->value->int32;
         weather->sunset = sunset_tuple->value->int32;
         weather->current_time = current_time_tuple->value->int32;
+        weather->location = location_tuple->value->cstring;
         weather->error = WEATHER_E_OK;
         weather->updated = time(NULL);
         if (debug_flag > 0) {
@@ -141,6 +138,7 @@ static void appmsg_in_received(DictionaryIterator *received, void *context) {
             APP_LOG(APP_LOG_LEVEL_DEBUG, "before if day 3 temperature %i and condition %i", weather->day3_temp, weather->day3_cond);
             APP_LOG(APP_LOG_LEVEL_DEBUG, "before if day 4 temperature %i and condition %i and time %i", weather->day4_temp, weather->day4_cond, weather->day4_time);
             APP_LOG(APP_LOG_LEVEL_DEBUG, "before if day 5 temperature %i and condition %i and time %i", weather->day5_temp, weather->day5_cond, weather->day5_time);
+            APP_LOG(APP_LOG_LEVEL_DEBUG, "before if astro location %s", weather->location);
         }
     }
     else if (error_tuple) {
@@ -149,9 +147,10 @@ static void appmsg_in_received(DictionaryIterator *received, void *context) {
     }
     else {
         weather->error = WEATHER_E_PHONE;
-        APP_LOG(APP_LOG_LEVEL_DEBUG, "Got message with unknown keys... day1_temp=%p day1_cond%p day2_temp=%p day2_cond%p day3_temp=%p day3_cond%p error=%p",
-                day1_temp_tuple, day1_cond_tuple, day2_temp_tuple, day2_cond_tuple, day3_temp_tuple, day3_cond_tuple, error_tuple);
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "Got message with unknown keys... day1_temp=%p day1_cond%p day2_temp=%p day2_cond%p day3_temp=%p day3_cond%p location_tuple=%p error=%p",
+                day1_temp_tuple, day1_cond_tuple, day2_temp_tuple, day2_cond_tuple, day3_temp_tuple, day3_cond_tuple, location_tuple, error_tuple);
     }
+    debug_flag = saver;
 }
 
 static void appmsg_in_dropped(AppMessageResult reason, void *context) {
@@ -174,20 +173,21 @@ static void appmsg_out_failed(DictionaryIterator *failed, AppMessageResult reaso
     switch (reason) {
     case APP_MSG_NOT_CONNECTED:
         weather->error = WEATHER_E_DISCONNECTED;
-        //      request_weather();
+        request_weather();
         break;
     case APP_MSG_SEND_REJECTED:
     case APP_MSG_SEND_TIMEOUT:
         weather->error = WEATHER_E_PHONE;
-        //      request_weather();
+        request_weather();
         break;
     default:
         weather->error = WEATHER_E_PHONE;
-        //      request_weather();
+        request_weather();
         break;
     }
 }
 
+/*
 static void sync_tuple_changed_callback(const uint32_t key, const Tuple* new_tuple, const Tuple* old_tuple, void* context) {
 
     //GFont custom_font_tinytemp 	= fonts_get_system_font(FONT_KEY_GOTHIC_18);
@@ -210,7 +210,7 @@ static void sync_tuple_changed_callback(const uint32_t key, const Tuple* new_tup
 
         break;
     }
-}
+}  */
 
 void init_network(WeatherData *weather_data)
 {
@@ -238,10 +238,15 @@ void close_network()
 
 void request_weather()
 {
-    DictionaryIterator *iter;
-    app_message_outbox_begin(&iter);
-
-    dict_write_uint8(iter, KEY_REQUEST_UPDATE, 42);
-
-    app_message_outbox_send();
+    if (requests_queued < 11) {
+        DictionaryIterator *iter;
+        app_message_outbox_begin(&iter);
+        dict_write_uint8(iter, KEY_REQUEST_UPDATE, 42);
+        app_message_outbox_send();
+        requests_queued = requests_queued + 1;
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "requests_queued = %i", requests_queued);
+    }
+    else {
+    if (debug_flag > -1) {APP_LOG(APP_LOG_LEVEL_DEBUG, "requests_queued = %i, too high, stop making requests", requests_queued); }
+    } 
 }

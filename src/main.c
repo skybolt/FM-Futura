@@ -16,7 +16,7 @@ static WeatherData *weather_data;
 static Window *window;
 static TextLayer *date_layer;
 static TextLayer *time_layer;
-WeatherLayer *weather_layer;
+WeatherLayer *conditions_layer;
 static WeatherLayer *hourly_left_layer;
 static WeatherLayer *hourly_right_layer;
 static WeatherLayer *forecast_left_layer;
@@ -45,19 +45,21 @@ void window_switch(void) {
         APP_LOG(APP_LOG_LEVEL_DEBUG, "window step was %d, night_time %i, day_time %i", window_step, night_time, day_time);
     }
     if (window_step == 2) {
-        layer_set_hidden(weather_layer, false);
+        layer_set_hidden(conditions_layer, false);
         layer_set_hidden(hourly_layer, true);
         layer_set_hidden(forecast_layer, true);
+        display_counter = 2;
         window_step = 0;
     } else if (window_step == 0) {
-        layer_set_hidden(weather_layer, true);
+        layer_set_hidden(conditions_layer, true);
         layer_set_hidden(hourly_layer, false);
         layer_set_hidden(forecast_layer, true);
         window_step = 1;
     } else if (window_step == 1) {
-        layer_set_hidden(weather_layer, true);
+        layer_set_hidden(conditions_layer, true);
         layer_set_hidden(hourly_layer, true);
         layer_set_hidden(forecast_layer, false);
+        display_counter = 2;
         window_step = 2;
     }
     //window_step = (window_step + 1) % 6;
@@ -71,6 +73,39 @@ void accel_tap_handler(AccelAxisType axis, int32_t direction) {
         APP_LOG(APP_LOG_LEVEL_INFO, "accl event received");
     }
     window_switch();
+}
+
+int epochToHourMin(int epoch) {
+    if (debug_flag > 0) {
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "epoch = %i", epoch);
+    }
+    int hourMinInt;
+    if (epoch < 2400) {
+        if (debug_flag > 0) {
+            APP_LOG(APP_LOG_LEVEL_DEBUG, "epoch %i < 2400, return epoch", epoch);
+        }
+        hourMinInt = epoch;
+    } else {
+        if (debug_flag > 0) {
+            APP_LOG(APP_LOG_LEVEL_DEBUG, "epoch %i (%i) > 2400, return hourMinInt", epoch, epoch % 86400);
+        }
+        epoch = epoch % 86400;
+        int hourInt = ((epoch - (epoch % 3600)) / 3600) * 100;
+        if (debug_flag > 0) {
+            APP_LOG(APP_LOG_LEVEL_DEBUG, "hourInt = %i", hourInt);
+        }
+        int minuteInt = (epoch % 3600) / 60;
+        if (debug_flag > 0) {
+            APP_LOG(APP_LOG_LEVEL_DEBUG, "minuteInt = %i", minuteInt);
+        }
+        hourMinInt = hourInt + minuteInt;
+        if (debug_flag > 0) {
+        }
+    }
+    if (debug_flag > 0) {
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "hourMinInt = %i", hourMinInt);
+    }
+    return hourMinInt;
 }
 
 static void handle_tick(struct tm *tick_time, TimeUnits units_changed) {
@@ -101,42 +136,29 @@ static void handle_tick(struct tm *tick_time, TimeUnits units_changed) {
     }
 
     time_t currentTime = time(0);
-    struct tm *currentLocalTime = localtime(&currentTime);
+    //struct tm *currentLocalTime = localtime(&currentTime);
 
-    uint32_t nowInt = currentTime;
-    if (debug_flag > 0) {
-        APP_LOG(APP_LOG_LEVEL_DEBUG, "nowInt = %lu", nowInt);
-    }
-    nowInt = nowInt % 86400;
-    if (debug_flag > 0) {
-        APP_LOG(APP_LOG_LEVEL_DEBUG, "nowInt = %lu", nowInt);
-    }
-    int hourInt = ((nowInt - (nowInt % 3600)) / 3600) * 100;
-    if (debug_flag > 0) {
-        APP_LOG(APP_LOG_LEVEL_DEBUG, "hourInt = %i", hourInt);
-    }
-    int minuteInt = (nowInt % 3600) / 60;
-    if (debug_flag > 0) {
-        APP_LOG(APP_LOG_LEVEL_DEBUG, "minuteInt = %i", minuteInt);
-    }
-    int currentInt = hourInt + minuteInt;
-    if (debug_flag > 0) {
-        APP_LOG(APP_LOG_LEVEL_DEBUG, "currentInt = %i", minuteInt);
-    }
+    //uint32_t nowInt = currentTime;
 
+    int currentInt = epochToHourMin(currentTime);
 
     // Update the bottom half of the screen: icon and temperature
 
     // Day/night check
     night_time = false;
     day_time = true;
-//    if (weather_data->current_time < weather_data->sunrise || weather_data->current_time > weather_data->sunset) {
-    if (currentInt < weather_data->sunrise || currentInt > weather_data->sunset) {
+
+    int sunrise = epochToHourMin(weather_data->sunrise);
+    int sunset = epochToHourMin(weather_data->sunset);
+    //if (weather_data->current_time < weather_data->sunrise || weather_data->current_time > weather_data->sunset) {
+    //if (currentInt < weather_data->sunrise || currentInt > weather_data->sunset) {
+    
+    if (currentInt < sunrise || currentInt > sunset) {
         night_time = true;
         day_time = false;
         if (debug_flag > 0) {
             //    APP_LOG(APP_LOG_LEVEL_DEBUG, "sunrise %i current time %i sunset %i", weather_data->sunrise, weather_data->current_time, weather_data->sunset);
-            APP_LOG(APP_LOG_LEVEL_DEBUG, "sunrise %i current time %i sunset %i", weather_data->sunrise, currentInt, weather_data->sunset);
+            APP_LOG(APP_LOG_LEVEL_DEBUG, "sunrise %i current time %i sunset %i", sunrise, currentInt, sunset);
             APP_LOG(APP_LOG_LEVEL_DEBUG, "night_time = %i, day_time = %i", night_time, day_time);
         }
 
@@ -144,7 +166,7 @@ static void handle_tick(struct tm *tick_time, TimeUnits units_changed) {
         night_time = false;
         day_time = true;
         if (debug_flag > 0) {
-            APP_LOG(APP_LOG_LEVEL_DEBUG, "sunrise %i current time %i sunset %i", weather_data->sunrise, currentInt, weather_data->sunset);
+            APP_LOG(APP_LOG_LEVEL_DEBUG, "sunrise %i current time %i sunset %i", sunrise, currentInt, sunset);
             APP_LOG(APP_LOG_LEVEL_DEBUG, "night_time = %i, day_time = %i", night_time, day_time);
         }
     }
@@ -156,53 +178,58 @@ static void handle_tick(struct tm *tick_time, TimeUnits units_changed) {
     {
         // 'Animate' loading icon until the first successful weather request
         if (animation_step == 0) {
-            weather_layer_set_icon(weather_layer, WEATHER_ICON_LOADING1);
+            weather_layer_set_icon(conditions_layer, WEATHER_ICON_LOADING1);
         }
         else if (animation_step == 1) {
-            weather_layer_set_icon(weather_layer, WEATHER_ICON_LOADING2);
+            weather_layer_set_icon(conditions_layer, WEATHER_ICON_LOADING2);
         }
         else if (animation_step >= 2) {
-            weather_layer_set_icon(weather_layer, WEATHER_ICON_LOADING3);
+            weather_layer_set_icon(conditions_layer, WEATHER_ICON_LOADING3);
             request_weather();
-
-
-            /*
-            static int retry_counter = 15;
-            if (retry_counter < 15) {
-                retry_counter = retry_counter + 1;
-                APP_LOG(APP_LOG_LEVEL_DEBUG, "retrying request_weather() in %d sec", 45 - (retry_counter * 3));
-            } else if (retry_counter == 15) {
-                request_weather();
-                retry_counter = 0;
-            }  */
         }
         animation_step = (animation_step + 1) % 3;
     }
     else {
         bool stale = false;
         // Update the weather icon and temperature
+        
+        if (weather_data->updated == 0) {
+            night_time = false;
+            day_time = true; 
+        }
+        
         if (weather_data->error) {
             stale = true;
-            weather_layer_set_icon(weather_layer, WEATHER_ICON_PHONE_ERROR);
+            weather_layer_set_icon(conditions_layer, WEATHER_ICON_CLOUD_ERROR);
         }
         else {
-            // Show the temperature as 'stale' if it has not been updated in 30 minutes
+            // Show the temperature as 'stale' if it has not been updated within DELAY variable seconds
 
-            if (weather_data->updated > time(NULL) + 1800) {
+            int delay = (5 * 60) - 10;
+            if (weather_data->updated < time(NULL) - delay) {
                 stale = true;
             }
+
+            int updated = weather_data->updated;
+            int time_null = time(NULL) - delay;
             bool big = false;
             bool small = true;
+            //if (updated < time_null) {
+                            if (1 < 0) {
+                APP_LOG(APP_LOG_LEVEL_DEBUG, "updated = %i, time_null = %i", updated, time_null);
+                APP_LOG(APP_LOG_LEVEL_DEBUG, "stale = %i", stale);
+                APP_LOG(APP_LOG_LEVEL_DEBUG, "upd_t %i > curr_tm - %i %i, stale should false, diff %i", delay, updated, time_null, time_null - updated);
+            }
 
             if (debug_flag > 0) {
-                weather_layer_set_temperature(weather_layer, (rand() % 180) - 50, rand() % 2, big);
+                weather_layer_set_temperature(conditions_layer, (rand() % 180) - 50, rand() % 2, big);
                 weather_layer_set_temperature(hourly_left_layer, (rand() % 180) - 50, rand() % 2, small);
                 weather_layer_set_temperature(hourly_right_layer, (rand() % 180) - 50, rand() % 2, small);
                 weather_layer_set_temperature(forecast_left_layer, (rand() % 180) - 50, rand() % 2, small);
                 weather_layer_set_temperature(forecast_right_layer, (rand() % 180) - 50, rand() % 2, small);
             }
             else {
-                weather_layer_set_temperature(weather_layer, weather_data->day1_temp, stale, big);
+                weather_layer_set_temperature(conditions_layer, weather_data->day1_temp, stale, big);
                 weather_layer_set_temperature(forecast_left_layer, weather_data->day4_temp, stale, small);
                 weather_layer_set_temperature(forecast_right_layer, weather_data->day5_temp, stale, small);
                 if (night_time == true) {
@@ -222,7 +249,7 @@ static void handle_tick(struct tm *tick_time, TimeUnits units_changed) {
             APP_LOG(APP_LOG_LEVEL_DEBUG, "set hourly inverter layer hidden = day_time = %i " + day_time);
         }
         if (debug_flag > 0) {
-            weather_layer_set_icon(weather_layer, rand() % 23);
+            weather_layer_set_icon(conditions_layer, rand() % 23);
             weather_layer_set_icon(hourly_left_layer, rand() % 23);
             weather_layer_set_icon(hourly_right_layer, rand() % 23);
             weather_layer_set_icon(forecast_left_layer, rand() % 23);
@@ -230,42 +257,51 @@ static void handle_tick(struct tm *tick_time, TimeUnits units_changed) {
         }
         else {
             if (bluetooth_connection_service_peek() == false) {
-                weather_layer_set_icon(weather_layer, WEATHER_ICON_PHONE_ERROR);
-                window_step = 2;
-                window_switch();
+                weather_layer_set_icon(conditions_layer, WEATHER_ICON_PHONE_ERROR);
+                layer_set_hidden(conditions_layer, false);
+                layer_set_hidden(hourly_layer, true);
+                layer_set_hidden(forecast_layer, true);
             }
 
             else if (bluetooth_connection_service_peek() == true) {
-                weather_layer_set_icon(weather_layer, weather_icon_for_condition(weather_data->day1_cond, night_time));
+                weather_layer_set_icon(conditions_layer, weather_icon_for_condition(weather_data->day1_cond, night_time));
             }
             weather_layer_set_icon(hourly_left_layer, weather_icon_for_condition(weather_data->day2_cond, night_time));
             weather_layer_set_icon(hourly_right_layer, weather_icon_for_condition(weather_data->day3_cond, day_time));
             weather_layer_set_icon(forecast_left_layer, weather_icon_for_condition(weather_data->day4_cond, 0));
             weather_layer_set_icon(forecast_right_layer, weather_icon_for_condition(weather_data->day5_cond, 0));
         }
+        
+        //static int
+        //display_counter = 4;
+        if (display_counter > 1) {
+            weather_layer_set_info(conditions_layer, weather_data->location);
+            display_counter = display_counter - 1;
+        } else if (display_counter == 1) {
+            weather_layer_set_info(conditions_layer, "  ");
+        }
 
-        //APP_LOG(APP_LOG_LEVEL_INFO, "setting day indicator with %i %i", weather_data->day4_time, weather_data->day5_time);
         if (debug_flag > 1) {
+            APP_LOG(APP_LOG_LEVEL_INFO, "setting day indicator with %i %i", weather_data->day4_time, weather_data->day5_time);
             weather_layer_set_time(forecast_right_layer, weather_data->day5_time);
             weather_layer_set_time(forecast_left_layer, weather_data->day4_time);
         }
     }
 
-    // Refresh the weather info every 15 minutes
-    //window_switch();
-//    layer_set_hidden(hourly_layer, rand() % 2);
+    //Refresh the weather info every 1 minutes
     if (window_time > 1) {
         window_time = window_time - 1;
     } else if (window_time > 0) {
-        layer_set_hidden(weather_layer, false);
+        layer_set_hidden(conditions_layer, false);
         layer_set_hidden(hourly_layer, true);
         layer_set_hidden(forecast_layer, true);
         window_step = 0;
         window_time = 0;
     }
 
-    if (units_changed & MINUTE_UNIT && (tick_time->tm_min % 1) == 0)
+    if (units_changed & MINUTE_UNIT && (tick_time->tm_min % 5) == 0)
     {
+        requests_queued = 0;
         request_weather();
     }
 }
@@ -299,15 +335,15 @@ static void init(void) {
     // Add weather layers
     bool big = false;
     bool small = true;
-    weather_layer = weather_layer_create(GRect(0, 90, 144, 80), big);
-    layer_add_child(window_get_root_layer(window), weather_layer);
+    conditions_layer = weather_layer_create(GRect(0, 90, 144, 80), big);
+    layer_add_child(window_get_root_layer(window), conditions_layer);
 
     hourly_left_layer = weather_layer_create(GRect(0, 90, 144, 80), small);
 //    layer_add_child(window_get_root_layer(window), hourly_left_layer);
 
     hourly_right_layer = weather_layer_create(GRect(72, 90, 144, 80), small);
 //    layer_add_child(window_get_root_layer(window), hourly_right_layer);
-    
+
     hourly_layer = layer_create(GRect(0, 0, 144, 168));
     layer_add_child(hourly_layer, hourly_left_layer);
     layer_add_child(hourly_layer, hourly_right_layer);
@@ -347,9 +383,12 @@ static void deinit(void) {
 
     text_layer_destroy(time_layer);
     text_layer_destroy(date_layer);
-    weather_layer_destroy(weather_layer);
+    weather_layer_destroy(conditions_layer);
     weather_layer_destroy(hourly_left_layer);
     weather_layer_destroy(hourly_right_layer);
+    weather_layer_destroy(forecast_left_layer);
+    weather_layer_destroy(forecast_right_layer);
+    weather_layer_cleanup(); 
 
     fonts_unload_custom_font(font_date);
     fonts_unload_custom_font(font_time);

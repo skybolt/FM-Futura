@@ -4,7 +4,7 @@
 
 //TextLayer *bt_layer;
 //TextLayer *bt_border_layer;
-WeatherLayer *weather_layer;
+//WeatherLayer *conditions_layer;
 
 static int current_icon;
 int day1_cond;

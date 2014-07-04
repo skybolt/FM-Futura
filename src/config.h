@@ -1,14 +1,3 @@
-//
-//  config.h
-//  
-//
-//  Created by skybolt on 6/24/14.
-//
-//
-
-#ifndef _config_h
-#define _config_h
-
-
-
-#endif
+// "c" for temperature in Celsius
+// "f" for temperature in Fahrenheit
+#define UNIT_SYSTEM "c"

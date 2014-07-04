@@ -103,6 +103,30 @@
       <FileRef
          location = "group:config.h">
       </FileRef>
+      <FileRef
+         location = "group:main.h">
+      </FileRef>
+      <FileRef
+         location = "group:main.c">
+      </FileRef>
+      <FileRef
+         location = "group:network.h">
+      </FileRef>
+      <FileRef
+         location = "group:network.c">
+      </FileRef>
+      <FileRef
+         location = "group:weather_layer.h">
+      </FileRef>
+      <FileRef
+         location = "group:weather_layer.c">
+      </FileRef>
+      <FileRef
+         location = "group:bluetooth.h">
+      </FileRef>
+      <FileRef
+         location = "group:bluetooth.c">
+      </FileRef>
       <Group
          location = "group:js"
          name = "js">
@@ -110,27 +134,6 @@
             location = "group:pebble-js-app.js">
          </FileRef>
       </Group>
-      <FileRef
-         location = "group:main.c">
-      </FileRef>
-      <FileRef
-         location = "group:network.c">
-      </FileRef>
-      <FileRef
-         location = "group:network.h">
-      </FileRef>
-      <FileRef
-         location = "group:weather_layer.c">
-      </FileRef>
-      <FileRef
-         location = "group:weather_layer.h">
-      </FileRef>
-      <FileRef
-         location = "group:bluetooth.c">
-      </FileRef>
-      <FileRef
-         location = "group:bluetooth.h">
-      </FileRef>
    </Group>
    <FileRef
       location = "group:appinfo.json">

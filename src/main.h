@@ -1,3 +1,8 @@
 // "c" for temperature in Celsius
 // "f" for temperature in Fahrenheit
-#define UNIT_SYSTEM "c"
+#pragma once
+
+int epochToHourMin(int epoch);
+//int display_counter;
+
+//int requests_queued;

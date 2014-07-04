@@ -1,4 +1,6 @@
 //working set version
+#pragma once
+
 #ifndef WEATHER_LAYER_H
 #define WEATHER_LAYER_H
 
@@ -42,9 +44,12 @@ typedef enum {
 typedef Layer WeatherLayer;
 
 WeatherLayer *weather_layer_create(GRect frame, bool is_small);
-void weather_layer_destroy(WeatherLayer* weather_layer);
-void weather_layer_set_icon(WeatherLayer* weather_layer, WeatherIcon icon);
+void weather_layer_destroy(WeatherLayer* conditions_layer);
+void weather_layer_set_icon(WeatherLayer* conditions_layer, WeatherIcon icon);
 void weather_layer_set_temperature(WeatherLayer* weather_layer, int16_t temperature, bool is_stale, bool is_small);
-void weather_layer_set_time(WeatherLayer* weather_layer, uint32_t timestamp);
+void weather_layer_set_time(WeatherLayer* conditions_layer, uint32_t timestamp);
+void weather_layer_set_info(WeatherLayer* conditions_layer, const char *string);
 uint8_t weather_icon_for_condition(int condition, bool night_time);
+void weather_layer_cleanup(void); day
+
 #endif

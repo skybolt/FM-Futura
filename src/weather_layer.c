@@ -33,8 +33,7 @@ static int debug_flag = 0;
 // Keep pointers to the two fonts we use.
 static GFont large_font, small_font, tiny_font;
 
-WeatherLayer *weather_layer_create(GRect frame, bool is_small)
-{
+WeatherLayer *weather_layer_create(GRect frame, bool is_small) {
     // Create a new layer with some extra space to save our custom Layer infos
     WeatherLayer *weather_layer = layer_create_with_data(frame, sizeof(WeatherLayerData));
     WeatherLayerData *wld = layer_get_data(weather_layer);
@@ -74,61 +73,27 @@ WeatherLayer *weather_layer_create(GRect frame, bool is_small)
         text_layer_set_text_alignment(wld->temp_layer, GTextAlignmentLeft);
         text_layer_set_font(wld->temp_layer, tiny_font);
         layer_add_child(weather_layer, text_layer_get_layer(wld->temp_layer));
-
-        int tall = 18;
-        wld->info_layer = text_layer_create(GRect(3, 78 - tall, 70, tall));
-        text_layer_set_background_color(wld->info_layer, GColorClear);
-        text_layer_set_text_color(wld->info_layer, GColorBlack);
-        //text_layer_set_font(wld->info_layer, tiny_font);
-        layer_add_child(weather_layer, text_layer_get_layer(wld->info_layer));
     }
+
+    
+    //info layer, used to show text of any kind
+    int tall = 20;
+    wld->info_layer = text_layer_create(GRect(2, 78 - tall, 70, tall));
+    text_layer_set_background_color(wld->info_layer, GColorClear);
+    text_layer_set_text_color(wld->info_layer, GColorBlack);
+    text_layer_set_font(wld->info_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
+	text_layer_set_overflow_mode(wld->info_layer, GTextOverflowModeFill);
+    //text_layer_set_font(wld->info_layer, tiny_font);
+    layer_add_child(weather_layer, text_layer_get_layer(wld->info_layer));
+
     wld->icon = NULL;
     return weather_layer;
 }
 
-void weather_layer_set_time(WeatherLayer *weather_layer, uint32_t timestamp) {
-    WeatherLayerData *wld = layer_get_data(weather_layer);
-
-    char time_text[] = "Day 00:00";
-    time_t weekday_t = timestamp;
-    struct tm *weekday_tm = localtime(&weekday_t);
-
-    strftime(   time_text,
-                sizeof(time_text),
-                clock_is_24h_style() ? "%a" : "%a",
-                weekday_tm);
-
-    if (time_text[0] == '0') {
-        memmove(time_text, &time_text[1], sizeof(time_text) - 1);
-    }
-
-    snprintf(wld->info_str, sizeof(wld->info_str), "%s", time_text);
-    text_layer_set_text(wld->info_layer, wld->info_str);
-
-    if (debug_flag > 0) {
-        APP_LOG(APP_LOG_LEVEL_DEBUG, "passed timestamp %lu ", timestamp);
-        APP_LOG(APP_LOG_LEVEL_DEBUG, "set text to %s ", time_text);
-    }
-}
-
-void weather_layer_set_icon(WeatherLayer* weather_layer, WeatherIcon icon) {
-    WeatherLayerData *wld = layer_get_data(weather_layer);
-
-    GBitmap *new_icon =  gbitmap_create_with_resource(WEATHER_ICONS[icon]);
-    // Display the new bitmap
-    bitmap_layer_set_bitmap(wld->icon_layer, new_icon);
-
-    // Destroy the ex-current icon if it existed
-    if (wld->icon != NULL) {
-        // A cast is needed here to get rid of the const-ness
-        gbitmap_destroy(wld->icon);
-    }
-    wld->icon = new_icon;
-}
-
 void weather_layer_set_temperature(WeatherLayer* weather_layer, int16_t t, bool is_stale, bool is_small) {
+    
     WeatherLayerData *wld = layer_get_data(weather_layer);
-
+    
     if (is_small == true) {
         //APP_LOG(APP_LOG_LEVEL_DEBUG, "small");
         snprintf(wld->temp_str, sizeof(wld->temp_str), "%i%s", t, is_stale ? "" : "°");
@@ -137,19 +102,19 @@ void weather_layer_set_temperature(WeatherLayer* weather_layer, int16_t t, bool 
     if (is_small == false) {
         //APP_LOG(APP_LOG_LEVEL_DEBUG, "not small");
         snprintf(wld->temp_str, sizeof(wld->temp_str), "%i%s", t, is_stale ? " " : "°");
-
+        
         // Temperature between -9° -> 9° or 20° -> 99°
         if ((t >= -9 && t <= 9) || (t >= 20 && t < 100)) {
             text_layer_set_font(wld->temp_layer, large_font);
             text_layer_set_text_alignment(wld->temp_layer, GTextAlignmentCenter);
-
+            
             // Is the temperature below zero?
             if (wld->temp_str[0] == '-') {
                 memmove(
-                    wld->temp_str + 1 + 1,
-                    wld->temp_str + 1,
-                    5 - (1 + 1)
-                );
+                        wld->temp_str + 1 + 1,
+                        wld->temp_str + 1,
+                        5 - (1 + 1)
+                        );
                 memcpy(&wld->temp_str[1], " ", 1);
             }
         }
@@ -164,7 +129,65 @@ void weather_layer_set_temperature(WeatherLayer* weather_layer, int16_t t, bool 
             text_layer_set_text_alignment(wld->temp_layer, GTextAlignmentCenter);
         }
     }
+
     text_layer_set_text(wld->temp_layer, wld->temp_str);
+}
+
+void weather_layer_set_info(WeatherLayer *weather_layer, const char *string) {
+    WeatherLayerData *wld = layer_get_data(weather_layer);
+    snprintf(wld->info_str, sizeof(wld->info_str), "%s", string);
+    text_layer_set_text(wld->info_layer, wld->info_str);
+    
+    //APP_LOG(APP_LOG_LEVEL_DEBUG, "string accepted %s", string);
+    //APP_LOG(APP_LOG_LEVEL_DEBUG, "wld->info_str %s", wld->info_str);
+    
+
+}
+
+void weather_layer_set_time(WeatherLayer *weather_layer, uint32_t timestamp) {
+    WeatherLayerData *wld = layer_get_data(weather_layer);
+    
+    char time_text[] = "Day 00:00";
+    time_t weekday_t = timestamp;
+    struct tm *weekday_tm = localtime(&weekday_t);
+    
+    strftime(   time_text,
+             sizeof(time_text),
+             clock_is_24h_style() ? "%a" : "%a",
+             weekday_tm);
+    
+    if (time_text[0] == '0') {
+        memmove(time_text, &time_text[1], sizeof(time_text) - 1);
+    }
+    
+    snprintf(wld->info_str, sizeof(wld->info_str), "%s", time_text);
+    text_layer_set_text(wld->info_layer, wld->info_str);
+    
+    if (debug_flag > 0) {
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "passed timestamp %lu ", timestamp);
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "set text to %s ", time_text);
+    }
+}
+
+void weather_layer_set_icon(WeatherLayer* weather_layer, WeatherIcon icon) {
+    WeatherLayerData *wld = layer_get_data(weather_layer);
+    
+    GBitmap *new_icon =  gbitmap_create_with_resource(WEATHER_ICONS[icon]);
+    // Display the new bitmap
+    bitmap_layer_set_bitmap(wld->icon_layer, new_icon);
+    
+    // Destroy the ex-current icon if it existed
+    if (wld->icon != NULL) {
+        // A cast is needed here to get rid of the const-ness
+        gbitmap_destroy(wld->icon);
+    }
+    wld->icon = new_icon;
+}
+
+void weather_layer_cleanup(void) {
+    fonts_unload_custom_font(large_font);
+    fonts_unload_custom_font(small_font);
+    
 }
 
 void weather_layer_destroy(WeatherLayer* weather_layer) {
@@ -188,15 +211,16 @@ void weather_layer_destroy(WeatherLayer* weather_layer) {
  * Converts an API Weather Condition into one of our icons.
  * Refer to: http://bugs.openweathermap.org/projects/api/wiki/Weather_Condition_Codes
  */
+
 uint8_t weather_icon_for_condition(int c, bool night_time) {
     // Thunderstorm
     //int debug_saver = debug_flag;
     //debug_flag = 2;
     if (c < 1) {
         if (debug_flag > 0) {
-            APP_LOG(APP_LOG_LEVEL_DEBUG, "WEATHER_ICON_PHONE_ERROR");
+            APP_LOG(APP_LOG_LEVEL_DEBUG, "WEATHER_ICON_CLOUD_ERROR");
         }
-        return WEATHER_ICON_PHONE_ERROR;
+        return WEATHER_ICON_CLOUD_ERROR;
     }
     if (c < 300) {
         if (debug_flag > 0) {
