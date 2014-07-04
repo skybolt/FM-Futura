@@ -272,7 +272,7 @@ function fetchOpenweatherHourlyForecast(latitude, longitude) {
                 //                var temperature, icon, city, sunrise, sunset, condition;
                 var offset = new Date().getTimezoneOffset() * 60;
                 current_time = ((Date.now()  / 1000)- offset) ; //% 86400;
-                var n = 4;
+                var n = 2;
                 if (response) {
                     var tempResult = response.list[n].main.temp;
                     var country = response.city.country;
@@ -310,7 +310,7 @@ function fetchOpenweatherHourlyForecast(latitude, longitude) {
                      "day2_temp": day2_temp,
                      });*/
 
-                    n = 8;
+                    n = 5;
                     tempResult = response.list[n].main.temp;
                     //country = response.city.country;
                     if (debug_flag > 0) {
