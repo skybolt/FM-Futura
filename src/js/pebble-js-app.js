@@ -566,7 +566,7 @@ function fetchWeatherundergroundHourlyForecast(latitude, longitude) { // gets da
                 if (debug_flag > 0) {
                     console.log(ownName + " " + req.responseText.length);
                 }
-                n = 2;
+                n = 3;
                 day = 1;
 
 
