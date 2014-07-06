@@ -274,8 +274,9 @@ static void handle_tick(struct tm *tick_time, TimeUnits units_changed) {
             weather_layer_set_icon(forecast_right_layer, weather_icon_for_condition(weather_data->day5_cond, 0));
         }
         
-        //static int
-        //display_counter = 4;
+        
+        if (weather_data->location) {
+        
         if (display_counter > 1) {
             weather_layer_set_info(conditions_layer, weather_data->location);
             weather_layer_set_info(hourly_left_layer, weather_data->day2_info);
@@ -285,6 +286,8 @@ static void handle_tick(struct tm *tick_time, TimeUnits units_changed) {
             weather_layer_set_info(conditions_layer, " ");
             weather_layer_set_info(hourly_left_layer, " ");
             weather_layer_set_info(hourly_right_layer, " ");
+        }
+        } else {
         }
 
         if (debug_flag > 1) {
