@@ -566,7 +566,7 @@ function fetchWeatherundergroundHourlyForecast(latitude, longitude) { // gets da
                 if (debug_flag > 0) {
                     console.log(ownName + " " + req.responseText.length);
                 }
-                n = 1;
+                n = 2;
                 day = 1;
 
 
@@ -586,7 +586,7 @@ function fetchWeatherundergroundHourlyForecast(latitude, longitude) { // gets da
                 }
                 var day2_low;
 
-                n = 15;
+                n = 12;
                 day = 2;
                 if (debug_flag > 1) {
                     //console.log("n " + n + " (array), m " + m + " (base), day = " + day);
