@@ -1,7 +1,7 @@
 //working set version
 
 
-var day1_temp, day1_cond, day2_temp, day2_cond, day3_temp, day3_cond, day4_temp, day4_cond, day4_info, day5_temp, day5_cond, day5_info, sunrise, sunset, current_time, current_hour, current_minute, current_epoch;
+var day1_temp, day1_cond, day2_temp, day2_cond, day3_temp, day3_cond, day4_temp, day4_cond, day4_info, day5_temp, day5_cond, day5_info, sunrise, sunset, current_time, current_hour, current_minute, current_epoch, pretty_hour;
 var debug_flag = 0;
 var provider_flag = 1;
 var updateInProgress = false;
@@ -22,18 +22,11 @@ function epochToTime(epoch) {
     var ownName = arguments.callee.toString();
     ownName = ownName.substr('function '.length);        // trim off "function "
     ownName = ownName.substr(0, ownName.indexOf('('));        // trim off everything after the function name
-    console.log("FUNCTION NAME = " + ownName);
-    console.log("input value = " + epoch);
     var offset = new Date().getTimezoneOffset() * 60;
     local_epoch = epoch - offset;
-    console.log("local epoch = " + local_epoch);
     time_in_seconds = local_epoch % 86400;
-    console.log("time_in_seconds = " + time_in_seconds);
-    console.log("local_epoch % 60 = " + local_epoch % 60);
     rounded_minutes = time_in_seconds - (time_in_seconds % 60);
-    console.log("rounded_minutes = " + rounded_minutes);
     time_hour = Math.round((time_in_seconds - (time_in_seconds % 60)) / 3600);
-    console.log("time_hour = " + time_hour);
 //    time_hour = time_hour - time_hour;  //uncomment this to test 0:00 or 12:00 AM
     if (time_hour > 11) {
         meridian = " PM";
@@ -44,7 +37,9 @@ function epochToTime(epoch) {
     if (time_hour == 0) {
         pretty_hour = 12 + " AM";
     }
-    else {
+    else if (time_hour == 12) {
+        pretty_hour = "12 PM";
+    } else {
         pretty_hour = (time_hour % 12) + meridian;
     }
     time = parseInt((time_hour * 100) + rounded_minutes);
@@ -57,7 +52,6 @@ function epochToTime(epoch) {
                     "\npretty hour = " + pretty_hour +
                     "\ntime = " + time);
     }
-
     return time;
 }
 
@@ -566,28 +560,32 @@ function fetchWeatherundergroundHourlyForecast(latitude, longitude) { // gets da
                 if (debug_flag > 0) {
                     console.log(ownName + " " + req.responseText.length);
                 }
-                n = 3;
-                day = 1;
+                n = 2;
+                day = 2;
 
 
                 //day2_cond = iconFromWeatherString(response.hourly_forecast[n].icon);
-                day2_cond = iconFromWeatherString(response.hourly_forecast[n].icon);
                 //day2_temp = day1_high;
-                timestamp = response.hourly_forecast[n].FCTTIME.epoch;
                 conditions = response.hourly_forecast[n].wx;
+                day2_cond = iconFromWeatherString(response.hourly_forecast[n].icon);
+                epochToTime
+                timestamp = response.hourly_forecast[n].FCTTIME.epoch;
                 day2_info = response.hourly_forecast[n].FCTTIME.civil;
                 if (debug_flag > -1) {
                     console.log("raw timestamp: " + timestamp);
                 }
-                timestamp = parseInt(timestamp) - parseInt (offset * 3600);
                 if (debug_flag > -1) {
-                    console.log("parseInt timestamp: " + timestamp);
-                    console.log("day2 FCTTIME civil = " + day2_info)
+                    console.log("day_" + day + " FCTTIME.epoch[" + n + "]= " + response.hourly_forecast[n].FCTTIME.epoch);
+                    console.log("day_" + day + " FCTTIME civil[" + n + "]= " + response.hourly_forecast[n].FCTTIME.civil);
                 }
+                epochToTime(timestamp);
+                day2_info = pretty_hour;
+                timestamp = parseInt(timestamp) - parseInt (offset * 3600);
+
                 var day2_low;
 
-                n = 12;
-                day = 2;
+                n = 11;
+                day = 3;
                 if (debug_flag > 1) {
                     //console.log("n " + n + " (array), m " + m + " (base), day = " + day);
                 }
@@ -600,17 +598,18 @@ function fetchWeatherundergroundHourlyForecast(latitude, longitude) { // gets da
                 if (debug_flag > 1) {
                     console.log("raw timestamp: " + timestamp);
                 }
-                timestamp = parseInt(timestamp) - parseInt (offset * 3600);
                 if (debug_flag > -1) {
-                    console.log("parseInt timestamp: " + timestamp);
-                    console.log("day3 FCTTIME civil = " + day3_info)
+                    console.log("day_" + day + " FCTTIME.epoch[" + n + "]= " + response.hourly_forecast[n].FCTTIME.epoch);
+                    console.log("day_" + day + " FCTTIME civil[" + n + "]= " + response.hourly_forecast[n].FCTTIME.civil);
                 }
+                epochToTime(timestamp);
+                day3_info = pretty_hour;
 
                 if (debug_flag > 1) {
                     console.log("\n call inside of " + ownName +
                                 "\nday1 temp " + day1_temp + " day1 cond " + day1_cond +
-                                "\nday2 temp " + day2_temp + " day2 cond " + day2_cond +
-                                "\nday3 temp " + day3_temp + " day3 cond " + day3_cond +
+                                "\nday2 temp " + day2_temp + " day2 cond " + day2_cond + " day2_info " + day2_info +
+                                "\nday3 temp " + day3_temp + " day3 cond " + day3_cond + " day3_info " + day3_info +
                                 "\nday4 temp " + day4_temp + " day4 cond " + day4_cond + " day4_ifno " + day4_info +
                                 "\nday5 temp " + day5_temp + " day5 temp " + day5_cond + " day5_info " + day5_info +
                                 "\nSunrise: " + sunrise +
@@ -728,8 +727,8 @@ function fetchWeatherundergroundDailyForecast(latitude, longitude) { // gets day
                     if (debug_flag > 1) {
                         console.log("\n call inside of " + ownName +
                                     "\nday1 temp " + day1_temp + " day1 cond " + day1_cond +
-                                    "\nday2 temp " + day2_temp + " day2 cond " + day2_cond +
-                                    "\nday3 temp " + day3_temp + " day3 cond " + day3_cond +
+                                    "\nday2 temp " + day2_temp + " day2 cond " + day2_cond + " day2_info " + day2_info +
+                                    "\nday3 temp " + day3_temp + " day3 cond " + day3_cond + " day3_info " + day3_info +
                                     "\nday4 temp " + day4_temp + " day4 cond " + day4_cond + " day4_ifno " + day4_info +
                                     "\nday5 temp " + day5_temp + " day5 temp " + day5_cond + " day5_info " + day5_info +
                                     "\nSunrise: " + sunrise +
@@ -798,7 +797,7 @@ function fetchWeatherundergroundAstronomy(latitude, longitude) {
                     current_minute = Math.round((today_in_seconds % 3600) / 60);
                     current_hour = Math.round((today_in_seconds - (current_minute * 60))/3600);
                     current_time = parseInt((current_hour * 100) + current_minute);
-                    if (debug_flag > -1) {
+                    if (debug_flag > 1) {
                         console.log("\nFUNCTION NAME = " + ownName +
                                     "\ncurrent_epoch = " + current_epoch +
                                     "\ntoday_in_seconds = " + today_in_seconds +
@@ -820,14 +819,14 @@ function fetchWeatherundergroundAstronomy(latitude, longitude) {
 
                         console.log("\nFUNCTION NAME = " + ownName +
                                     "\nday1 temp " + day1_temp + " day1 cond " + day1_cond +
-                                    "\nday2 temp " + day2_temp + " day2 cond " + day2_cond +
-                                    "\nday3 temp " + day3_temp + " day3 cond " + day3_cond +
+                                    "\nday2 temp " + day2_temp + " day2 cond " + day2_cond + " day2_info " + day2_info +
+                                    "\nday3 temp " + day3_temp + " day3 cond " + day3_cond + " day3_info " + day3_info +
                                     "\nday4 temp " + day4_temp + " day4 cond " + day4_cond + " day4_ifno " + day4_info +
                                     "\nday5 temp " + day5_temp + " day5 temp " + day5_cond + " day5_info " + day5_info +
                                     "\nSunrise: " + sunrise +
                                     "\nSunset: " + sunset +
                                     "\ncurrent_time: " + current_time +
-                                    "\nlocation: " + location);
+                                    "\nlocation " + location);
 
                         console.log("calling sendFMFutura, message payload:\n" + day1_temp + day1_cond + day2_temp + day2_cond + day3_temp + day3_cond + day4_temp + day4_cond + day4_info + day5_temp + day5_cond + day5_info + sunrise + sunset + current_time + location);
                     }

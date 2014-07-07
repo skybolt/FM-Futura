@@ -7,7 +7,7 @@ int requests_queued = 0;
 
 static void appmsg_in_received(DictionaryIterator *received, void *context) {
     int saver = debug_flag;
-    debug_flag = 2;
+    debug_flag = debug_flag;
     requests_queued = 0;
     display_counter = 3;
     if (debug_flag > -1) {
