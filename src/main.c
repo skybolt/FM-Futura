@@ -261,53 +261,62 @@ static void handle_tick(struct tm *tick_time, TimeUnits units_changed) {
             
             
             if (bluetooth_connection_service_peek() == false) {
-                weather_layer_set_icon(conditions_layer, WEATHER_ICON_PHONE_ERROR);
-                weather_layer_set_icon(hourly_left_layer, WEATHER_ICON_PHONE_ERROR);
-                weather_layer_set_icon(forecast_left_layer, WEATHER_ICON_PHONE_ERROR);
+                if (debug_flag > 2) {APP_LOG(APP_LOG_LEVEL_DEBUG, "bluetooth_connection_service_peek = %i", bluetooth_connection_service_peek());}
+//                weather_layer_set_icon(conditions_layer, WEATHER_ICON_PHONE_ERROR);
+//                weather_layer_set_icon(hourly_left_layer, WEATHER_ICON_PHONE_ERROR);
+//                weather_layer_set_icon(forecast_left_layer, WEATHER_ICON_PHONE_ERROR);
                 //layer_set_hidden(conditions_layer, false);
                 //layer_set_hidden(hourly_layer, true);
                 //layer_set_hidden(forecast_layer, true);
+                weather_layer_set_info(conditions_layer, "phone disconnected");
+                weather_layer_set_info(hourly_left_layer, "phone disconnected");
+                weather_layer_set_info(hourly_right_layer, "");
+                weather_layer_set_info(forecast_left_layer, "phone disconnected");
+                weather_layer_set_info(forecast_right_layer, "");
+                
             }
 
             else if (bluetooth_connection_service_peek() == true) {
+                if (debug_flag > 2) {APP_LOG(APP_LOG_LEVEL_DEBUG, "bluetooth_connection_service_peek = %i", bluetooth_connection_service_peek());}
                 weather_layer_set_icon(conditions_layer, weather_icon_for_condition(weather_data->day1_cond, night_time));
+                weather_layer_set_icon(hourly_left_layer, weather_icon_for_condition(weather_data->day2_cond, night_time));
+                weather_layer_set_icon(forecast_left_layer, weather_icon_for_condition(weather_data->day4_cond, 0));
+            
+                if (weather_data->location) {
+                    
+                    if (display_counter > 1) {
+                        weather_layer_set_info(conditions_layer, weather_data->location);
+                        
+                        weather_layer_set_time(forecast_right_layer, weather_data->day5_time);
+                        weather_layer_set_time(forecast_left_layer, weather_data->day4_time);
+                        if (night_time == false) {
+                            weather_layer_set_info(hourly_left_layer, weather_data->day2_info);
+                            weather_layer_set_info(hourly_right_layer, weather_data->day3_info);
+                        } else if (night_time == true) {
+                            weather_layer_set_info(hourly_left_layer, weather_data->day3_info);
+                            weather_layer_set_info(hourly_right_layer, weather_data->day2_info);
+                        }
+                        display_counter = display_counter - 1;
+                    } else if (display_counter == 1) {
+                        weather_layer_set_info(conditions_layer, "");
+                        weather_layer_set_info(hourly_left_layer, "");
+                        weather_layer_set_info(hourly_right_layer, "");
+                        weather_layer_set_info(forecast_right_layer, "");
+                        weather_layer_set_info(forecast_left_layer, "");
+                    }
+                    if (debug_flag > 1) {
+                        APP_LOG(APP_LOG_LEVEL_INFO, "setting day indicator with %i %i", weather_data->day4_time, weather_data->day5_time);
+                        weather_layer_set_time(forecast_right_layer, weather_data->day5_time);
+                        weather_layer_set_time(forecast_left_layer, weather_data->day4_time);
+                    }
+                    
+                } else {}
+            
             }
-            weather_layer_set_icon(hourly_left_layer, weather_icon_for_condition(weather_data->day2_cond, night_time));
             weather_layer_set_icon(hourly_right_layer, weather_icon_for_condition(weather_data->day3_cond, day_time));
-            weather_layer_set_icon(forecast_left_layer, weather_icon_for_condition(weather_data->day4_cond, 0));
             weather_layer_set_icon(forecast_right_layer, weather_icon_for_condition(weather_data->day5_cond, 0));
         }
-        
-        
-        if (weather_data->location) {
-        
-        if (display_counter > 1) {
-            weather_layer_set_info(conditions_layer, weather_data->location);
-            weather_layer_set_time(forecast_right_layer, weather_data->day5_time);
-            weather_layer_set_time(forecast_left_layer, weather_data->day4_time);
-            if (night_time == false) {
-                weather_layer_set_info(hourly_left_layer, weather_data->day2_info);
-                weather_layer_set_info(hourly_right_layer, weather_data->day3_info);
-            } else if (night_time == true) {
-                weather_layer_set_info(hourly_left_layer, weather_data->day3_info);
-                weather_layer_set_info(hourly_right_layer, weather_data->day2_info);
-            }
-            display_counter = display_counter - 1;
-        } else if (display_counter == 1) {
-            weather_layer_set_info(conditions_layer, "");
-            weather_layer_set_info(hourly_left_layer, "");
-            weather_layer_set_info(hourly_right_layer, "");
-            weather_layer_set_info(forecast_right_layer, "");
-            weather_layer_set_info(forecast_left_layer, "");
-        }
-        } else {
-        }
 
-        if (debug_flag > 1) {
-            APP_LOG(APP_LOG_LEVEL_INFO, "setting day indicator with %i %i", weather_data->day4_time, weather_data->day5_time);
-            weather_layer_set_time(forecast_right_layer, weather_data->day5_time);
-            weather_layer_set_time(forecast_left_layer, weather_data->day4_time);
-        }
     }
 
     //Refresh the weather info every 1 minutes
@@ -367,8 +376,8 @@ static void init(void) {
 //    layer_add_child(window_get_root_layer(window), hourly_right_layer);
 
     hourly_layer = layer_create(GRect(0, 0, 144, 168));
-    layer_add_child(hourly_layer, hourly_left_layer);
     layer_add_child(hourly_layer, hourly_right_layer);
+    layer_add_child(hourly_layer, hourly_left_layer);
     layer_set_hidden(hourly_layer, true);
     layer_add_child(window_get_root_layer(window), hourly_layer);
 
@@ -376,8 +385,8 @@ static void init(void) {
     forecast_right_layer = weather_layer_create(GRect(72, 90, 144, 80), small);
     forecast_layer = layer_create(GRect(0, 0, 144, 168));
     day3_inverter_layer = inverter_layer_create(GRect(0, 10, 72, 70));
-    layer_add_child(forecast_layer, forecast_left_layer);
     layer_add_child(forecast_layer, forecast_right_layer);
+    layer_add_child(forecast_layer, forecast_left_layer);
     layer_add_child(hourly_right_layer, inverter_layer_get_layer(day3_inverter_layer));
     layer_set_hidden(inverter_layer_get_layer(day3_inverter_layer), false);
     hourly_inverter_layer = inverter_layer_create(GRect(0, 100, 144, 80));
@@ -406,10 +415,10 @@ static void deinit(void) {
     text_layer_destroy(time_layer);
     text_layer_destroy(date_layer);
     weather_layer_destroy(conditions_layer);
-    weather_layer_destroy(hourly_left_layer);
     weather_layer_destroy(hourly_right_layer);
-    weather_layer_destroy(forecast_left_layer);
+    weather_layer_destroy(hourly_left_layer);
     weather_layer_destroy(forecast_right_layer);
+    weather_layer_destroy(forecast_left_layer);
     weather_layer_cleanup(); 
 
     fonts_unload_custom_font(font_date);
