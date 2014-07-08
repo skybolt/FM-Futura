@@ -250,19 +250,23 @@ static void handle_tick(struct tm *tick_time, TimeUnits units_changed) {
         if (debug_flag > 0) {
             APP_LOG(APP_LOG_LEVEL_DEBUG, "set hourly inverter layer hidden = day_time = %i " + day_time);
         }
+        
         if (debug_flag > 3) {
             weather_layer_set_icon(conditions_layer, rand() % 23);
             weather_layer_set_icon(hourly_left_layer, rand() % 23);
             weather_layer_set_icon(hourly_right_layer, rand() % 23);
             weather_layer_set_icon(forecast_left_layer, rand() % 23);
             weather_layer_set_icon(forecast_right_layer, rand() % 23);
-        }
-        else {
+        } else {
+            
+            
             if (bluetooth_connection_service_peek() == false) {
                 weather_layer_set_icon(conditions_layer, WEATHER_ICON_PHONE_ERROR);
-                layer_set_hidden(conditions_layer, false);
-                layer_set_hidden(hourly_layer, true);
-                layer_set_hidden(forecast_layer, true);
+                weather_layer_set_icon(hourly_left_layer, WEATHER_ICON_PHONE_ERROR);
+                weather_layer_set_icon(forecast_left_layer, WEATHER_ICON_PHONE_ERROR);
+                //layer_set_hidden(conditions_layer, false);
+                //layer_set_hidden(hourly_layer, true);
+                //layer_set_hidden(forecast_layer, true);
             }
 
             else if (bluetooth_connection_service_peek() == true) {
@@ -279,8 +283,13 @@ static void handle_tick(struct tm *tick_time, TimeUnits units_changed) {
         
         if (display_counter > 1) {
             weather_layer_set_info(conditions_layer, weather_data->location);
-            weather_layer_set_info(hourly_left_layer, weather_data->day2_info);
-            weather_layer_set_info(hourly_right_layer, weather_data->day3_info);
+            if (night_time == false) {
+                weather_layer_set_info(hourly_left_layer, weather_data->day2_info);
+                weather_layer_set_info(hourly_right_layer, weather_data->day3_info);
+            } else if (night_time == true) {
+                weather_layer_set_info(hourly_left_layer, weather_data->day3_info);
+                weather_layer_set_info(hourly_right_layer, weather_data->day2_info);
+            }
             display_counter = display_counter - 1;
         } else if (display_counter == 1) {
             weather_layer_set_info(conditions_layer, " ");
