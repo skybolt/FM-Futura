@@ -42,7 +42,7 @@ WeatherLayer *weather_layer_create(GRect frame, bool is_small) {
     tiny_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FUTURA_18));
 
     // Add background layer
-    wld->temp_layer_background = text_layer_create(GRect(0, 10, 144, 68));
+    wld->temp_layer_background = text_layer_create(GRect(0, 10, 72, 68));
     text_layer_set_background_color(wld->temp_layer_background, GColorWhite);
     layer_add_child(weather_layer, text_layer_get_layer(wld->temp_layer_background));
 
@@ -77,7 +77,7 @@ WeatherLayer *weather_layer_create(GRect frame, bool is_small) {
     
     //info layer, used to show text of any kind
     int tall = 20;
-    wld->info_layer = text_layer_create(GRect(2, 78 - tall, 70, tall));
+    wld->info_layer = text_layer_create(GRect(2, 78 - tall, 144, tall));
     text_layer_set_background_color(wld->info_layer, GColorClear);
     text_layer_set_text_color(wld->info_layer, GColorBlack);
     text_layer_set_font(wld->info_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
