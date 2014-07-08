@@ -283,6 +283,8 @@ static void handle_tick(struct tm *tick_time, TimeUnits units_changed) {
         
         if (display_counter > 1) {
             weather_layer_set_info(conditions_layer, weather_data->location);
+            weather_layer_set_time(forecast_right_layer, weather_data->day5_time);
+            weather_layer_set_time(forecast_left_layer, weather_data->day4_time);
             if (night_time == false) {
                 weather_layer_set_info(hourly_left_layer, weather_data->day2_info);
                 weather_layer_set_info(hourly_right_layer, weather_data->day3_info);
@@ -292,9 +294,11 @@ static void handle_tick(struct tm *tick_time, TimeUnits units_changed) {
             }
             display_counter = display_counter - 1;
         } else if (display_counter == 1) {
-            weather_layer_set_info(conditions_layer, " ");
-            weather_layer_set_info(hourly_left_layer, " ");
-            weather_layer_set_info(hourly_right_layer, " ");
+            weather_layer_set_info(conditions_layer, "");
+            weather_layer_set_info(hourly_left_layer, "");
+            weather_layer_set_info(hourly_right_layer, "");
+            weather_layer_set_info(forecast_right_layer, "");
+            weather_layer_set_info(forecast_left_layer, "");
         }
         } else {
         }
