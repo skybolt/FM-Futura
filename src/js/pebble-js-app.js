@@ -3,7 +3,7 @@
 
 var day1_temp, day1_cond, day2_temp, day2_cond, day3_temp, day3_cond, day4_temp, day4_cond, day4_info, day5_temp, day5_cond, day5_info, sunrise, sunset, current_time, current_hour, current_minute, current_epoch, pretty_hour;
 var debug_flag = 0;
-var provider_flag = 1;
+var provider_flag = 0;
 var updateInProgress = false;
 
 Pebble.addEventListener("ready", function(e) {

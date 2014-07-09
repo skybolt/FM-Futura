@@ -42,9 +42,8 @@ WeatherLayer *weather_layer_create(GRect frame, bool is_small) {
     tiny_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FUTURA_18));
 
     // Add background layer
-    wld->temp_layer_background = text_layer_create(GRect(0, 10, 72, 68));
-    text_layer_set_background_color(wld->temp_layer_background, GColorWhite);
-    layer_add_child(weather_layer, text_layer_get_layer(wld->temp_layer_background));
+
+
 
     // Add temperature layer
     if (is_small == false) {
@@ -52,29 +51,29 @@ WeatherLayer *weather_layer_create(GRect frame, bool is_small) {
         if (debug_flag > 0) {
             APP_LOG(APP_LOG_LEVEL_DEBUG, "creating BIG temp frame");
         }
+        wld->temp_layer_background = text_layer_create(GRect(0, 10, 144, 68));
+        text_layer_set_background_color(wld->temp_layer_background, GColorWhite);
         wld->temp_layer = text_layer_create(GRect(70, 19, 72, 80));
         text_layer_set_background_color(wld->temp_layer, GColorClear);
         text_layer_set_text_alignment(wld->temp_layer, GTextAlignmentCenter);
         text_layer_set_font(wld->temp_layer, tiny_font);
-        layer_add_child(weather_layer, text_layer_get_layer(wld->temp_layer));
     }
 
-    // Add bitmap layer
-    wld->icon_layer = bitmap_layer_create(GRect(9, 13, 60, 60));
-    layer_add_child(weather_layer, bitmap_layer_get_layer(wld->icon_layer));
-
-    //this is below bitmap to set it on top of it, so it won't be blocked by the icon layer
     if (is_small == true) {
         APP_LOG(APP_LOG_LEVEL_DEBUG, "creating small temp frame");
+        wld->temp_layer_background = text_layer_create(GRect(0, 10, 72, 68));
+        text_layer_set_background_color(wld->temp_layer_background, GColorWhite);
         wld->temp_layer = text_layer_create(GRect(3, 11, 60, 60));
         text_layer_set_background_color(wld->temp_layer, GColorClear);
         text_layer_set_text_color(wld->temp_layer, GColorBlack);
         text_layer_set_text_alignment(wld->temp_layer, GTextAlignmentLeft);
         text_layer_set_font(wld->temp_layer, tiny_font);
-        layer_add_child(weather_layer, text_layer_get_layer(wld->temp_layer));
     }
 
-    
+    layer_add_child(weather_layer, text_layer_get_layer(wld->temp_layer_background));
+    wld->icon_layer = bitmap_layer_create(GRect(9, 13, 60, 60));
+    layer_add_child(weather_layer, bitmap_layer_get_layer(wld->icon_layer));
+    layer_add_child(weather_layer, text_layer_get_layer(wld->temp_layer));
     //info layer, used to show text of any kind
     int tall = 20;
     wld->info_layer = text_layer_create(GRect(2, 78 - tall, 144, tall));

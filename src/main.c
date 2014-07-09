@@ -269,8 +269,8 @@ static void handle_tick(struct tm *tick_time, TimeUnits units_changed) {
                 //layer_set_hidden(hourly_layer, true);
                 //layer_set_hidden(forecast_layer, true);
                 weather_layer_set_info(conditions_layer, "phone disconnected");
-                weather_layer_set_info(hourly_left_layer, "phone disconnected");
-                weather_layer_set_info(hourly_right_layer, "");
+                weather_layer_set_info(hourly_left_layer, "phone disc");
+                weather_layer_set_info(hourly_right_layer, "onnected");
                 weather_layer_set_info(forecast_left_layer, "phone disconnected");
                 weather_layer_set_info(forecast_right_layer, "");
                 
@@ -278,9 +278,6 @@ static void handle_tick(struct tm *tick_time, TimeUnits units_changed) {
 
             else if (bluetooth_connection_service_peek() == true) {
                 if (debug_flag > 2) {APP_LOG(APP_LOG_LEVEL_DEBUG, "bluetooth_connection_service_peek = %i", bluetooth_connection_service_peek());}
-                weather_layer_set_icon(conditions_layer, weather_icon_for_condition(weather_data->day1_cond, night_time));
-                weather_layer_set_icon(hourly_left_layer, weather_icon_for_condition(weather_data->day2_cond, night_time));
-                weather_layer_set_icon(forecast_left_layer, weather_icon_for_condition(weather_data->day4_cond, 0));
             
                 if (weather_data->location) {
                     
@@ -313,7 +310,10 @@ static void handle_tick(struct tm *tick_time, TimeUnits units_changed) {
                 } else {}
             
             }
+            weather_layer_set_icon(conditions_layer, weather_icon_for_condition(weather_data->day1_cond, night_time));
+            weather_layer_set_icon(hourly_left_layer, weather_icon_for_condition(weather_data->day2_cond, night_time));
             weather_layer_set_icon(hourly_right_layer, weather_icon_for_condition(weather_data->day3_cond, day_time));
+            weather_layer_set_icon(forecast_left_layer, weather_icon_for_condition(weather_data->day4_cond, 0));
             weather_layer_set_icon(forecast_right_layer, weather_icon_for_condition(weather_data->day5_cond, 0));
         }
 
