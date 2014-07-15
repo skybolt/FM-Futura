@@ -181,12 +181,18 @@ static void handle_tick(struct tm *tick_time, TimeUnits units_changed) {
         // 'Animate' loading icon until the first successful weather request
         if (animation_step == 0) {
             weather_layer_set_icon(conditions_layer, WEATHER_ICON_LOADING1);
+            weather_layer_set_icon(hourly_left_layer, WEATHER_ICON_LOADING1);
+            weather_layer_set_icon(forecast_left_layer, WEATHER_ICON_LOADING1);
         }
         else if (animation_step == 1) {
             weather_layer_set_icon(conditions_layer, WEATHER_ICON_LOADING2);
+            weather_layer_set_icon(hourly_left_layer, WEATHER_ICON_LOADING2);
+            weather_layer_set_icon(forecast_left_layer, WEATHER_ICON_LOADING2);
         }
         else if (animation_step >= 2) {
             weather_layer_set_icon(conditions_layer, WEATHER_ICON_LOADING3);
+            weather_layer_set_icon(hourly_left_layer, WEATHER_ICON_LOADING3);
+            weather_layer_set_icon(forecast_left_layer, WEATHER_ICON_LOADING3);
             request_weather();
         }
         animation_step = (animation_step + 1) % 3;
@@ -268,10 +274,10 @@ static void handle_tick(struct tm *tick_time, TimeUnits units_changed) {
                 //layer_set_hidden(conditions_layer, false);
                 //layer_set_hidden(hourly_layer, true);
                 //layer_set_hidden(forecast_layer, true);
-                weather_layer_set_info(conditions_layer, "phone disconnected");
-                weather_layer_set_info(hourly_left_layer, "phone disc");
-                weather_layer_set_info(hourly_right_layer, "onnected");
-                weather_layer_set_info(forecast_left_layer, "phone disconnected");
+                weather_layer_set_info(conditions_layer, "BT disc");
+                weather_layer_set_info(hourly_left_layer, "BT disc");
+                weather_layer_set_info(hourly_right_layer, "");
+                weather_layer_set_info(forecast_left_layer, "BT disc");
                 weather_layer_set_info(forecast_right_layer, "");
                 
             }
@@ -296,6 +302,7 @@ static void handle_tick(struct tm *tick_time, TimeUnits units_changed) {
                         display_counter = display_counter - 1;
                     } else if (display_counter == 1) {
                         weather_layer_set_info(conditions_layer, "");
+                        //weather_layer_set_info(conditions_layer, weather_data->location);
                         weather_layer_set_info(hourly_left_layer, "");
                         weather_layer_set_info(hourly_right_layer, "");
                         weather_layer_set_info(forecast_right_layer, "");
@@ -330,7 +337,7 @@ static void handle_tick(struct tm *tick_time, TimeUnits units_changed) {
         window_time = 0;
     }
 
-    if (units_changed & MINUTE_UNIT && (tick_time->tm_min % 5) == 0)
+    if (units_changed & MINUTE_UNIT && (tick_time->tm_min % 1) == 0)
     {
         requests_queued = 0;
         request_weather();
