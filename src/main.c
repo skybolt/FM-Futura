@@ -224,7 +224,7 @@ static void handle_tick(struct tm *tick_time, TimeUnits units_changed) {
             bool big = false;
             bool small = true;
             //if (updated < time_null) {
-                            if (1 > 0) {
+                            if (debug_flag > 0) {
                 APP_LOG(APP_LOG_LEVEL_DEBUG, "updated = %i, time_null = %i", updated, time_null);
                 APP_LOG(APP_LOG_LEVEL_DEBUG, "stale = %i", stale);
                 APP_LOG(APP_LOG_LEVEL_DEBUG, "upd_t %i > curr_tm - %i %i, stale should false, diff %i", delay, updated, time_null, time_null - updated);
@@ -407,7 +407,7 @@ static void init(void) {
     layer_add_child(window_get_root_layer(window), forecast_layer);
     
     white_layer = inverter_layer_create(GRect(0,0,144,98));
-    layer_add_child(window_get_root_layer(window), inverter_layer_get_layer(white_layer));
+    //layer_add_child(window_get_root_layer(window), inverter_layer_get_layer(white_layer));
 
     // Update the screen right away
     time_t now = time(NULL);
