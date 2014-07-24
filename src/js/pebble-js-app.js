@@ -9,7 +9,7 @@ var updateInProgress = false;
 if (provider_flag == 0) {
     console.log("provider: openweather.org");
 }
-if (provider_flag == 0) {
+if (provider_flag == 1) {
     console.log("provider: weatherunderground.com");
 }
 
