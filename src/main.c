@@ -27,9 +27,11 @@ static Layer *hourly_layer;
 static Layer *forecast_layer;
 static InverterLayer *day3_inverter_layer;
 static InverterLayer *hourly_inverter_layer;
+static InverterLayer *white_layer;
 
 static int window_step = 0;
 static int window_time = 0;
+static int delay_min = 10;
 static bool night_time = false;
 static bool day_time = true;
 
@@ -54,7 +56,7 @@ void window_switch(void) {
     } else if (window_step == 0) {
         layer_set_hidden(conditions_layer, true);
         layer_set_hidden(hourly_layer, false);
-        layer_set_hidden(forecast_layer, true);\
+        layer_set_hidden(forecast_layer, true);
         display_counter = 3;
         window_step = 1;
     } else if (window_step == 1) {
@@ -212,8 +214,7 @@ static void handle_tick(struct tm *tick_time, TimeUnits units_changed) {
         }
         else {
             // Show the temperature as 'stale' if it has not been updated within DELAY variable seconds
-
-            int delay = (5 * 60) - 10;
+            int delay = (delay_min * 60 * 2);
             if (weather_data->updated < time(NULL) - delay) {
                 stale = true;
             }
@@ -223,17 +224,17 @@ static void handle_tick(struct tm *tick_time, TimeUnits units_changed) {
             bool big = false;
             bool small = true;
             //if (updated < time_null) {
-                            if (1 < 0) {
+                            if (1 > 0) {
                 APP_LOG(APP_LOG_LEVEL_DEBUG, "updated = %i, time_null = %i", updated, time_null);
                 APP_LOG(APP_LOG_LEVEL_DEBUG, "stale = %i", stale);
                 APP_LOG(APP_LOG_LEVEL_DEBUG, "upd_t %i > curr_tm - %i %i, stale should false, diff %i", delay, updated, time_null, time_null - updated);
             }
 
             if (debug_flag > 3) {
-                weather_layer_set_temperature(conditions_layer, (rand() % 180) - 50, rand() % 2, big);
-                weather_layer_set_temperature(hourly_left_layer, (rand() % 180) - 50, rand() % 2, small);
-                weather_layer_set_temperature(hourly_right_layer, (rand() % 180) - 50, rand() % 2, small);
-                weather_layer_set_temperature(forecast_left_layer, (rand() % 180) - 50, rand() % 2, small);
+                weather_layer_set_temperature(conditions_layer,     (rand() % 180) - 50, rand() % 2, big);
+                weather_layer_set_temperature(hourly_left_layer,    (rand() % 180) - 50, rand() % 2, small);
+                weather_layer_set_temperature(hourly_right_layer,   (rand() % 180) - 50, rand() % 2, small);
+                weather_layer_set_temperature(forecast_left_layer,  (rand() % 180) - 50, rand() % 2, small);
                 weather_layer_set_temperature(forecast_right_layer, (rand() % 180) - 50, rand() % 2, small);
             }
             else {
@@ -337,7 +338,7 @@ static void handle_tick(struct tm *tick_time, TimeUnits units_changed) {
         window_time = 0;
     }
 
-    if (units_changed & MINUTE_UNIT && (tick_time->tm_min % 1) == 0)
+    if (units_changed & MINUTE_UNIT && (tick_time->tm_min % delay_min) == 0)
     {
         requests_queued = 0;
         request_weather();
@@ -404,6 +405,9 @@ static void init(void) {
     //layer_add_child(hourly_layer, inverter_layer_get_layer(hourly_inverter_layer));
     layer_add_child(window_get_root_layer(window), inverter_layer_get_layer(hourly_inverter_layer));
     layer_add_child(window_get_root_layer(window), forecast_layer);
+    
+    white_layer = inverter_layer_create(GRect(0,0,144,98));
+    layer_add_child(window_get_root_layer(window), inverter_layer_get_layer(white_layer));
 
     // Update the screen right away
     time_t now = time(NULL);
