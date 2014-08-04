@@ -32,6 +32,7 @@ static InverterLayer *white_layer;
 static int window_step = 0;
 static int window_time = 0;
 static int delay_min = 10;
+static int display_init = 3;
 static bool night_time = false;
 static bool day_time = true;
 
@@ -43,7 +44,7 @@ GFont font_date;
 GFont font_time;
 
 void window_switch(void) {
-    window_time = 57;
+    window_time = 17;
     if (debug_flag > 0) {
         APP_LOG(APP_LOG_LEVEL_DEBUG, "window step was %d, night_time %i, day_time %i", window_step, night_time, day_time);
     }
@@ -51,19 +52,19 @@ void window_switch(void) {
         layer_set_hidden(conditions_layer, false);
         layer_set_hidden(hourly_layer, true);
         layer_set_hidden(forecast_layer, true);
-        display_counter = 3;
+        display_counter = display_init;
         window_step = 0;
     } else if (window_step == 0) {
         layer_set_hidden(conditions_layer, true);
         layer_set_hidden(hourly_layer, false);
         layer_set_hidden(forecast_layer, true);
-        display_counter = 3;
+        display_counter = display_init;
         window_step = 1;
     } else if (window_step == 1) {
         layer_set_hidden(conditions_layer, true);
         layer_set_hidden(hourly_layer, true);
         layer_set_hidden(forecast_layer, false);
-        display_counter = 2;
+        display_counter = display_init;
         window_step = 2;
     }
     //window_step = (window_step + 1) % 6;
@@ -178,8 +179,7 @@ static void handle_tick(struct tm *tick_time, TimeUnits units_changed) {
 
 
     static int animation_step = 0;
-    if (weather_data->updated == 0 && weather_data->error == WEATHER_E_OK)
-    {
+    if (weather_data->updated == 0 && weather_data->error == WEATHER_E_OK) {
         // 'Animate' loading icon until the first successful weather request
         if (animation_step == 0) {
             weather_layer_set_icon(conditions_layer, WEATHER_ICON_LOADING1);
@@ -199,6 +199,7 @@ static void handle_tick(struct tm *tick_time, TimeUnits units_changed) {
         }
         animation_step = (animation_step + 1) % 3;
     }
+    
     else {
         bool stale = false;
         // Update the weather icon and temperature
@@ -208,10 +209,13 @@ static void handle_tick(struct tm *tick_time, TimeUnits units_changed) {
             day_time = true; 
         }
         
+        //if stale flag sent from pebble.js == true, then set stale == true. This means that we can hand back saved values from local.saved but mark it stale. Nice!
+        
         if (weather_data->error) {
             stale = true;
             weather_layer_set_icon(conditions_layer, WEATHER_ICON_CLOUD_ERROR);
         }
+        
         else {
             // Show the temperature as 'stale' if it has not been updated within DELAY variable seconds
             int delay = (delay_min * 60 * 2);
@@ -253,6 +257,7 @@ static void handle_tick(struct tm *tick_time, TimeUnits units_changed) {
 
 
         }
+        
         layer_set_hidden(inverter_layer_get_layer(hourly_inverter_layer), day_time);
         if (debug_flag > 0) {
             APP_LOG(APP_LOG_LEVEL_DEBUG, "set hourly inverter layer hidden = day_time = %i " + day_time);
@@ -340,6 +345,7 @@ static void handle_tick(struct tm *tick_time, TimeUnits units_changed) {
 
     if (units_changed & MINUTE_UNIT && (tick_time->tm_min % delay_min) == 0)
     {
+        
         requests_queued = 0;
         request_weather();
     }
@@ -407,7 +413,7 @@ static void init(void) {
     layer_add_child(window_get_root_layer(window), forecast_layer);
     
     white_layer = inverter_layer_create(GRect(0,0,144,98));
-    //layer_add_child(window_get_root_layer(window), inverter_layer_get_layer(white_layer));
+    layer_add_child(window_get_root_layer(window), inverter_layer_get_layer(white_layer));
 
     // Update the screen right away
     time_t now = time(NULL);
