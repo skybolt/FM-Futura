@@ -15,6 +15,7 @@ static WeatherData *weather_data;
 
 /* Global variables to keep track of the UI elements */
 int debug_flag = 0;
+
 static Window *window;
 static TextLayer *date_layer;
 static TextLayer *time_layer;
@@ -31,7 +32,7 @@ static InverterLayer *white_layer;
 
 static int window_step = 0;
 static int window_time = 0;
-static int delay_min = 10;
+static int delay_min = 1;
 static int display_init = 3;
 static bool night_time = false;
 static bool day_time = true;
@@ -227,12 +228,15 @@ static void handle_tick(struct tm *tick_time, TimeUnits units_changed) {
             int time_null = time(NULL) - delay;
             bool big = false;
             bool small = true;
+            int debug_return = debug_flag;
+            debug_flag = 1;
             //if (updated < time_null) {
                             if (debug_flag > 0) {
                 APP_LOG(APP_LOG_LEVEL_DEBUG, "updated = %i, time_null = %i", updated, time_null);
                 APP_LOG(APP_LOG_LEVEL_DEBUG, "stale = %i", stale);
                 APP_LOG(APP_LOG_LEVEL_DEBUG, "upd_t %i > curr_tm - %i %i, stale should false, diff %i", delay, updated, time_null, time_null - updated);
             }
+            debug_flag = debug_return;
 
             if (debug_flag > 3) {
                 weather_layer_set_temperature(conditions_layer,     (rand() % 180) - 50, rand() % 2, big);

@@ -13,7 +13,7 @@ static void appmsg_in_received(DictionaryIterator *received, void *context) {
     if (debug_flag > -1) {
         APP_LOG(APP_LOG_LEVEL_DEBUG, "In received.");
     }
-    WeatherData *weather = (WeatherData*) context;
+    WeatherData *weather_data = (WeatherData*) context;
 
     Tuple *day1_temp_tuple = dict_find(received, KEY_DAY1_TEMP);
     if (debug_flag > 0) {
@@ -110,7 +110,7 @@ static void appmsg_in_received(DictionaryIterator *received, void *context) {
     }
 
     if (day1_temp_tuple && day1_cond_tuple) {
-        weather->day1_temp = day1_temp_tuple->value->int32;
+        weather_data->day1_temp = day1_temp_tuple->value->int32;
         weather->day1_cond = day1_cond_tuple->value->int32;
         weather->day2_temp = day2_temp_tuple->value->int32;
         weather->day2_cond = day2_cond_tuple->value->int32;
@@ -164,7 +164,7 @@ static void appmsg_out_sent(DictionaryIterator *sent, void *context) {
 }
 
 static void appmsg_out_failed(DictionaryIterator *failed, AppMessageResult reason, void *context) {
-    WeatherData *weather = (WeatherData*) context;
+    WeatherData *weather_data = (WeatherData*) context;
 
     APP_LOG(APP_LOG_LEVEL_DEBUG, "Out failed: %i", reason);
 
