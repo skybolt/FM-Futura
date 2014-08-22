@@ -14,7 +14,7 @@
 static WeatherData *weather_data;
 
 /* Global variables to keep track of the UI elements */
-int debug_flag = 0;
+
 
 static Window *window;
 static TextLayer *date_layer;
@@ -34,8 +34,14 @@ static int window_step = 0;
 static int window_time = 0;
 static int delay_min = 1;
 static int display_init = 3;
+int debug_flag = 0;
+int debug_return = 0;
+
 static bool night_time = false;
 static bool day_time = true;
+bool stale = false;
+bool big = false;
+bool small = true;
 
 static char date_text[] = "XXX 00";
 static char time_text[] = "00:00";
@@ -45,28 +51,28 @@ GFont font_date;
 GFont font_time;
 
 void window_switch(void) {
-    window_time = 17;
+    window_time = 7;
     if (debug_flag > 0) {
         APP_LOG(APP_LOG_LEVEL_DEBUG, "window step was %d, night_time %i, day_time %i", window_step, night_time, day_time);
     }
-    if (window_step == 2) {
+    if (window_step == 0) {
         layer_set_hidden(conditions_layer, false);
         layer_set_hidden(hourly_layer, true);
-        layer_set_hidden(forecast_layer, true);
-        display_counter = display_init;
-        window_step = 0;
-    } else if (window_step == 0) {
-        layer_set_hidden(conditions_layer, true);
-        layer_set_hidden(hourly_layer, false);
         layer_set_hidden(forecast_layer, true);
         display_counter = display_init;
         window_step = 1;
     } else if (window_step == 1) {
         layer_set_hidden(conditions_layer, true);
+        layer_set_hidden(hourly_layer, false);
+        layer_set_hidden(forecast_layer, true);
+        display_counter = display_init;
+        window_step = 2;
+    } else if (window_step == 2) {
+        layer_set_hidden(conditions_layer, true);
         layer_set_hidden(hourly_layer, true);
         layer_set_hidden(forecast_layer, false);
         display_counter = display_init;
-        window_step = 2;
+        window_step = 0;
     }
     //window_step = (window_step + 1) % 6;
     if (debug_flag > 0) {
@@ -115,7 +121,30 @@ int epochToHourMin(int epoch) {
 }
 
 static void handle_tick(struct tm *tick_time, TimeUnits units_changed) {
+
+    int weather_timestamp = weather_data->current_time;
+    time_t currentTime = time(0);
+    int currentInt = time(NULL);
+    //int delay = (delay_min * 60 * 2) + 0;
+    int delay = (delay_min + 1) * 60;
+    
+
+
+    
     if (units_changed & MINUTE_UNIT) {
+
+            if (weather_timestamp - (currentInt - (delay * 10)) > 0)  {
+            stale = false;
+            } else {
+            stale = true;
+            }
+        
+        if (debug_flag > 0) {
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "current_time tuple = %i", weather_data->current_time);
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "int weather_timestamp = %i", weather_timestamp);
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "stale countdown (if neg, it's stale) = %i", weather_timestamp - (currentInt - delay));
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "stale = %i", stale);
+        }
         // Update the time - Fix to deal with 12 / 24 centering bug
         time_t currentTime = time(0);
         struct tm *currentLocalTime = localtime(&currentTime);
@@ -130,9 +159,9 @@ static void handle_tick(struct tm *tick_time, TimeUnits units_changed) {
         if (!clock_is_24h_style() && (time_text[0] == '0')) {
             memmove(time_text, &time_text[1], sizeof(time_text) - 1);
         }
-
         text_layer_set_text(time_layer, time_text);
     }
+    
     if (units_changed & DAY_UNIT) {
         // Update the date - Without a leading 0 on the day of the month
         char day_text[4];
@@ -141,30 +170,18 @@ static void handle_tick(struct tm *tick_time, TimeUnits units_changed) {
         text_layer_set_text(date_layer, date_text);
     }
 
-    time_t currentTime = time(0);
-    //struct tm *currentLocalTime = localtime(&currentTime);
-
-    //uint32_t nowInt = currentTime;
-
-    int currentInt = epochToHourMin(currentTime);
-
-    // Update the bottom half of the screen: icon and temperature
-
-    // Day/night check
-    night_time = false;
-    day_time = true;
-
     int sunrise = epochToHourMin(weather_data->sunrise);
     int sunset = epochToHourMin(weather_data->sunset);
+    int current_time = epochToHourMin(currentInt);
     //if (weather_data->current_time < weather_data->sunrise || weather_data->current_time > weather_data->sunset) {
     //if (currentInt < weather_data->sunrise || currentInt > weather_data->sunset) {
-    
-    if (currentInt < sunrise || currentInt > sunset) {
+
+    if (currentInt < sunrise || current_time > sunset) {
         night_time = true;
         day_time = false;
         if (debug_flag > 0) {
             //    APP_LOG(APP_LOG_LEVEL_DEBUG, "sunrise %i current time %i sunset %i", weather_data->sunrise, weather_data->current_time, weather_data->sunset);
-            APP_LOG(APP_LOG_LEVEL_DEBUG, "sunrise %i current time %i sunset %i", sunrise, currentInt, sunset);
+            APP_LOG(APP_LOG_LEVEL_DEBUG, "sunrise %i current time %i sunset %i", sunrise, current_time, sunset);
             APP_LOG(APP_LOG_LEVEL_DEBUG, "night_time = %i, day_time = %i", night_time, day_time);
         }
 
@@ -172,16 +189,15 @@ static void handle_tick(struct tm *tick_time, TimeUnits units_changed) {
         night_time = false;
         day_time = true;
         if (debug_flag > 0) {
-            APP_LOG(APP_LOG_LEVEL_DEBUG, "sunrise %i current time %i sunset %i", sunrise, currentInt, sunset);
+            APP_LOG(APP_LOG_LEVEL_DEBUG, "sunrise %i current time %i sunset %i", sunrise, current_time, sunset);
             APP_LOG(APP_LOG_LEVEL_DEBUG, "night_time = %i, day_time = %i", night_time, day_time);
         }
     }
 
 
-
+    // Animate "loading" icon dots until the first successful weather request
     static int animation_step = 0;
     if (weather_data->updated == 0 && weather_data->error == WEATHER_E_OK) {
-        // 'Animate' loading icon until the first successful weather request
         if (animation_step == 0) {
             weather_layer_set_icon(conditions_layer, WEATHER_ICON_LOADING1);
             weather_layer_set_icon(hourly_left_layer, WEATHER_ICON_LOADING1);
@@ -202,10 +218,10 @@ static void handle_tick(struct tm *tick_time, TimeUnits units_changed) {
     }
     
     else {
-        bool stale = false;
-        // Update the weather icon and temperature
         
+        // Update the weather icon and temperature
         if (weather_data->updated == 0) {
+            //stale = true;
             night_time = false;
             day_time = true; 
         }
@@ -213,45 +229,49 @@ static void handle_tick(struct tm *tick_time, TimeUnits units_changed) {
         //if stale flag sent from pebble.js == true, then set stale == true. This means that we can hand back saved values from local.saved but mark it stale. Nice!
         
         if (weather_data->error) {
-            stale = true;
+            //stale = true;
             weather_layer_set_icon(conditions_layer, WEATHER_ICON_CLOUD_ERROR);
+            weather_layer_set_temperature(conditions_layer, 99, stale, big);
         }
         
         else {
+            //stuff goes here if there's not a weather error.
+            weather_layer_set_temperature(conditions_layer, 88, stale, big);
+            
+        }
+        
             // Show the temperature as 'stale' if it has not been updated within DELAY variable seconds
-            int delay = (delay_min * 60 * 2);
-            if (weather_data->updated < time(NULL) - delay) {
-                stale = true;
-            }
+            //if (weather_data->updated < time(NULL) - delay) {stale = true;}
+        
+        
+        //below commented out 1:27PM 8/11
+            //int updated = weather_data->updated;
+            //int stale_time = time(NULL) - delay;
+            //int current_time = time(NULL);
 
-            int updated = weather_data->updated;
-            int time_null = time(NULL) - delay;
-            bool big = false;
-            bool small = true;
-            int debug_return = debug_flag;
-            debug_flag = 1;
-            //if (updated < time_null) {
-                            if (debug_flag > 0) {
-                APP_LOG(APP_LOG_LEVEL_DEBUG, "updated = %i, time_null = %i", updated, time_null);
-                APP_LOG(APP_LOG_LEVEL_DEBUG, "stale = %i", stale);
-                APP_LOG(APP_LOG_LEVEL_DEBUG, "upd_t %i > curr_tm - %i %i, stale should false, diff %i", delay, updated, time_null, time_null - updated);
+            if (debug_flag > 0) {
+                
+              //  APP_LOG(APP_LOG_LEVEL_DEBUG, "current time = %i, updated = %i, stale_time = %i, delay = %i", current_time, updated, stale_time, delay);
+                //APP_LOG(APP_LOG_LEVEL_DEBUG, "stale = %i", stale);
+                //APP_LOG(APP_LOG_LEVEL_DEBUG, "update - stale_time = %i, stale_time - update = %i, stale = %i", updated - stale_time, stale_time - updated, stale);
+                //APP_LOG(APP_LOG_LEVEL_DEBUG, "delay %i > curr_tm - %i %i, stale should false, diff %i", delay, updated, stale_time, stale_time - updated);
             }
-            debug_flag = debug_return;
-
+        
             if (debug_flag > 3) {
                 weather_layer_set_temperature(conditions_layer,     (rand() % 180) - 50, rand() % 2, big);
                 weather_layer_set_temperature(hourly_left_layer,    (rand() % 180) - 50, rand() % 2, small);
                 weather_layer_set_temperature(hourly_right_layer,   (rand() % 180) - 50, rand() % 2, small);
                 weather_layer_set_temperature(forecast_left_layer,  (rand() % 180) - 50, rand() % 2, small);
                 weather_layer_set_temperature(forecast_right_layer, (rand() % 180) - 50, rand() % 2, small);
-            }
-            else {
+            } else {
                 weather_layer_set_temperature(conditions_layer, weather_data->day1_temp, stale, big);
                 weather_layer_set_temperature(forecast_left_layer, weather_data->day4_temp, stale, small);
                 weather_layer_set_temperature(forecast_right_layer, weather_data->day5_temp, stale, small);
+                
                 if (night_time == true) {
                     weather_layer_set_temperature(hourly_left_layer, weather_data->day3_temp, stale, small);
                     weather_layer_set_temperature(hourly_right_layer, weather_data->day2_temp, stale, small);
+                
                 } else if (night_time == false) {
                     weather_layer_set_temperature(hourly_left_layer, weather_data->day2_temp, stale, small);
                     weather_layer_set_temperature(hourly_right_layer, weather_data->day3_temp, stale, small);
@@ -260,7 +280,7 @@ static void handle_tick(struct tm *tick_time, TimeUnits units_changed) {
             }
 
 
-        }
+        //}
         
         layer_set_hidden(inverter_layer_get_layer(hourly_inverter_layer), day_time);
         if (debug_flag > 0) {
@@ -324,7 +344,9 @@ static void handle_tick(struct tm *tick_time, TimeUnits units_changed) {
                         weather_layer_set_time(forecast_left_layer, weather_data->day4_time);
                     }
                     
-                } else {}
+                } else {
+                //this is what happens if there is no such thing as weather data location
+                }
             
             }
             weather_layer_set_icon(conditions_layer, weather_icon_for_condition(weather_data->day1_cond, night_time));
@@ -336,9 +358,11 @@ static void handle_tick(struct tm *tick_time, TimeUnits units_changed) {
 
     }
 
-    //Refresh the weather info every 1 minutes
+    
+    //set window times. Why?
     if (window_time > 1) {
         window_time = window_time - 1;
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "window_time = %i", window_time);
     } else if (window_time > 0) {
         layer_set_hidden(conditions_layer, false);
         layer_set_hidden(hourly_layer, true);
@@ -349,10 +373,30 @@ static void handle_tick(struct tm *tick_time, TimeUnits units_changed) {
 
     if (units_changed & MINUTE_UNIT && (tick_time->tm_min % delay_min) == 0)
     {
-        
+        //Refresh the weather info every 1 * delay_min minutes
         requests_queued = 0;
         request_weather();
     }
+    
+//    bool stale = false;
+    
+    //int delay = (delay_min * 60 * 2);
+    //delay = (delay_min * 60) -1;
+    //delay = 50;
+    //if (weather_data->updated < time(NULL) - delay) {stale = true;}
+    
+    int debug_return = debug_flag;
+    debug_flag = 0;
+    //if (weather_data->updated < stale_time) {
+/*    if (debug_flag > 0) {
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "current time = %i, updated = %i, stale_time = %i", current_time, updated, stale_time);
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "stale = %i", stale);
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "upd_t %i > curr_tm - %i %i, stale should false, diff %i", delay, updated, stale_time, stale_time - updated);
+        // maybe change above line curr_tm - updated, (cuz upd is zero) to sompething plus update? I know, updated minus curr time? If update is 0, result -14029409403
+        //and then stale = true. If UPD is now, then result 0. Then how to incorporate delay of 120? trigger time is curr_time - delay. (now - 120). Does that need to be positive?
+        // if so, then updated minus now = ?? don't know try later.
+    }  */
+    debug_flag = debug_return;
 }
 
 static void init(void) {

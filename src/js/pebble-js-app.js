@@ -1,7 +1,7 @@
 //working set version
 
 
-var day1_temp, day1_cond, day2_temp, day2_cond, day3_temp, day3_cond, day4_temp, day4_cond, day4_info, day5_temp, day5_cond, day5_info, sunrise, sunset, current_time, current_hour, current_minute, current_epoch, pretty_hour;
+//var day1_temp, day1_cond, day2_temp, day2_cond, day3_temp, day3_cond, day4_temp, day4_cond, day4_info, day5_temp, day5_cond, day5_info, sunrise, sunset, current_time, current_hour, current_minute, current_epoch, pretty_hour, weather_timestamp, location, wu_location, ow_location;
 var debug_flag = 0;
 var provider_flag = 1;
 var updateInProgress = false;
@@ -67,8 +67,8 @@ function checkRequestTime() { //check to see if its too soon to request an updat
     var ownName = arguments.callee.toString();
     ownName = ownName.substr('function '.length);        // trim off "function "
     ownName = ownName.substr(0, ownName.indexOf('('));        // trim off everything after the function name
-
-    if (debug_flag > 4) {
+    var debug_flag = 1;
+    if (debug_flag > 0) {
         console.log("FUNCTION NAME = " + ownName + " debug_flag " + debug_flag);
         console.log("Should I start a request?");
     }
@@ -78,7 +78,8 @@ function checkRequestTime() { //check to see if its too soon to request an updat
     if (debug_flag > 4) {
         console.log("now time " + now);
     }
-    var delay = 29;
+    var delay = 590;
+    //delay = 170
     if (debug_flag > 4) {
         console.log("lastUpdate: " + localStorage.getItem("lastUpdate"));
     }
@@ -97,9 +98,39 @@ function checkRequestTime() { //check to see if its too soon to request an updat
             console.log("localStorage.lastUpdate found: " + lastUpdate);
         }
     }
-    if ((lastUpdate + delay) < now) {
+
+
+    // lastUpdate = timestamp of last updated
+    // delay = how long to wait before declaring stale
+    // nextUpdate = lastUpdate + delay (lastUpdate moved into the future by (delay) seconds
+    // stale = nextUpdate - now (if NU > now, NU is still in future, hence fresh. NU is larger than now, so NU - now = positive. Fresh = stale is positive integer.
+    // if stale is negative, then NU < now, so than NU - now is negative. Stale negative, then it's stale.
+
+    // lastUpdate is when last updated. Now is now, delay is how long to wait before refresh.
+
+    // if stale is positive, it's fresh. If stale is negative. it's stale.
+    // schanrio 0): Fresh by 10 seconds. nextUpdate - now = 10; nextUpdate - (now + 10) = 0
+    // scnario 1.5):Fresh by 11 seconds. NU - now = 11; nu - (now + 10) = 1.
+    // sncart x): Fresh by 5 seconds. NU - now = 5; nu - (now + 10) = -5.
+    // schanrio 1): stale by 10 seconds. nextUpdate - now = -10; lastUpdate + delay - (now + 10) = -20
+    // schanrio 1): stale by 9 seconds. nextUpdate - now = -9; nextUpdate - (now + 10) = -19
+    // scenario 2): stale by 11 seconds. nextUpdate - (now) = -11, nextUpdate - (now + 10) = -21,
+
+    var nextUpdate = lastUpdate + delay;
+    var stale = parseInt(nextUpdate - now);
+    console.log("stale countdown = " + stale);
+    console.log("delay - stale = (count up) " + (delay - stale));
+
+    //if ((lastUpdate + delay) < now) {
+    //if (nextUpdate < now) {
+    if (stale < 0) {
+
+        console.log("yes, start new request, stale < 0");
+//all three lines above should be same same
         if (debug_flag > 4) {
-            console.log("overdue " + (now - (lastUpdate + delay)) + " seconds!!");
+            console.log("overdue, stale " + (now - (lastUpdate + delay))    + " seconds!!");
+            console.log("overdue, stale " + (now - (nextUpdate))            + " seconds!!");
+            //if above lines == same, delete top one
         }
 
         now = parseInt(Math.round(now));
@@ -107,29 +138,81 @@ function checkRequestTime() { //check to see if its too soon to request an updat
         updateInProgress = false;
         updateWeather();
 
-    } else if ((lastUpdate + delay) > now) {
-        var stale = parseInt((lastUpdate + delay) - now);
-        if (debug_flag > 4) {
-            console.log("debug_flag = " + debug_flag);
+//    }  else if (nextUpdate > (now)) {
+    }
+
+    else if (delay - stale < 10) {
+        console.log("NO, do NOT start new request, stale + 10 < 0");
+        console.log("state + 10 = " + (stale + 10));
+        console.log("In fact, do NOTHING, becuase you JUST DID SOMETHING " + (delay - stale) + " seconds ago");
+    }
+
+    else if (stale > 0) {
+        //two above lines same way?
+        //don't want to do fresh routine until ripe. Until it's been fresh for at least 10 seconds.
+        // this is to avoid collisions on the message send, which may cause crashes.
+        console.log("NO, do NOT start new request, stale > 0, not stale");
+        console.log("instead, just re-send FM FUTURA DATA");
+        if (debug_flag > -1) {
+            //console.log("stale not larger than now + 10");
+            //console.log("debug_flag = " + debug_flag);
             console.log("please wait " + stale + " seconds");
             console.log("is " + (delay - stale) + " > " + delay + "? No.");
+            //localStorage.setItem("wu_location","farts");
+            console.log("checking storage of wu_location " + localStorage.getItem("wu_location"));
+            console.log("getting OW location, re-sending locally stored weather info");
         }
+        //sendFMFutura();
 
+
+        updateLocation();
+        //sendFMFutura();
+        //            }  else if (nextUpdate > now + 10) {
     }
 
 
+    else {
+        console.log("fails stale < 0");
+        console.log("fails stale > 0");
+        console.log("fails (stale + 10) < 0");
+    }
+}
+
+
+function updateLocation() {
+    var debug_flag = 1;
+    if (debug_flag > 0) {
+        console.log("(updateLocation) checking to see if updateInProgress");
+        console.log("updateInProgress = " + updateInProgress);
+    }
+    if (!updateInProgress) {
+        if (debug_flag > 0) {
+            console.log("updateInProgress = " + updateInProgress + ", No update in progress! setting update in progress to TRUE");
+            //console.log("checking updateInProgress = " + updateInProgress);
+        }
+        updateInProgress = true;
+        var locationOptions = { "timeout": 15000, "maximumAge": 300000 };
+        navigator.geolocation.getCurrentPosition(getLocation_locationSuccess, locationError, locationOptions);
+    } else {
+        if (debug_flag > 0) {
+            console.log("KILLING REQUEST, either in progress or too soon. Not starting a new request");
+        }
+    }
+    console.log("updateLocation closing -- updateInProgress = " + updateInProgress);
 }
 
 function updateWeather() {
+    var debug_flag = 1;
     if (debug_flag > 0) {
-        console.log("checking to see if updateInProgress");
-        console.log("debug_flag = " + debug_flag);
+        console.log("(updateWeather) checking to see if updateInProgress");
+        console.log("updateInProgress = " + updateInProgress);
     }
+
     if (!updateInProgress) {
-        updateInProgress = true;
         if (debug_flag > 0) {
-            console.log("nope! No update in progress!");
+            console.log("updateInProgress = " + updateInProgress + ", No update in progress! setting update in progress to TRUE");
         }
+        updateInProgress = true;
         var locationOptions = { "timeout": 15000, "maximumAge": 300000 };
         navigator.geolocation.getCurrentPosition(locationSuccess, locationError, locationOptions);
     }
@@ -138,6 +221,18 @@ function updateWeather() {
             console.log("Not starting a new request. Another one is in progress...");
         }
     }
+    console.log("updateWeather closing -- updateInProgress = " + updateInProgress);
+}
+
+function getLocation_locationSuccess(pos) {
+    var coordinates = pos.coords;
+    if (debug_flag > 0) {
+        console.log("Location Success!!\nGot coordinates:\n" + JSON.stringify(coordinates));
+    }
+    fetchOpenweatherLocation(coordinates.latitude, coordinates.longitude);
+    console.log("getting openweather LCOATION ONLY");
+    console.log("new latitude = " + coordinates.latitude + " longitude " + coordinates.longitude);
+
 }
 
 function locationSuccess(pos) {
@@ -246,6 +341,7 @@ function fetchOpenweatherConditions(latitude, longitude) {
         }
     };
     req.send(null);
+    updateInProgress = false;
 }
 
 function fetchOpenweatherHourlyForecast(latitude, longitude) {
@@ -269,6 +365,7 @@ function fetchOpenweatherHourlyForecast(latitude, longitude) {
                 //                var temperature, icon, city, sunrise, sunset, condition;
                 var offset = new Date().getTimezoneOffset() * 60;
                 current_time = ((Date.now()  / 1000)- offset) ; //% 86400;
+                console.log("current_time = " + current_time + " line c272");
                 var n = 2;
                 if (response) {
                     var tempResult = response.list[n].main.temp;
@@ -350,6 +447,7 @@ function fetchOpenweatherHourlyForecast(latitude, longitude) {
         }
     }; //end onlod
     req.send(null);
+    updateInProgress = false;
 }
 
 function fetchOpenweatherDailyForecast(latitude, longitude) {       // sends days 3, 4, 5
@@ -461,6 +559,7 @@ function fetchOpenweatherDailyForecast(latitude, longitude) {       // sends day
         }
     };
     req.send(null);
+    updateInProgress = false;
 }
 
 function fetchWeatherundergroundConditions(latitude, longitude) { // gets day 1
@@ -503,11 +602,14 @@ function fetchWeatherundergroundConditions(latitude, longitude) { // gets day 1
                         //console.log("n " + n + " (array), m " + m + " (base), day = " + day);
                     }
                     day1_cond = iconFromWeatherString(response.current_observation.icon);
+                    localStorage.setItem("day1_cond", day1_cond);
 
                     if (response.location.country === "US") {
                         day1_temp = parseInt(response.current_observation.temp_f);
+                        localStorage.setItem("day1_temp", day1_temp);
                     } else {
                         day1_temp = parseInt(response.current_observation.temp_c);
+                        localStorage.setItem("day1_temp" = day1_temp);
                     }
                     if (debug_flag > 0) {
                         console.log("\n call inside of " + ownName +
@@ -539,6 +641,7 @@ function fetchWeatherundergroundConditions(latitude, longitude) { // gets day 1
         }
     };
     req.send(null);
+    updateInProgress = false;
 }
 
 function fetchWeatherundergroundHourlyForecast(latitude, longitude) { // gets day 1, 2 in section URL hourly
@@ -575,7 +678,8 @@ function fetchWeatherundergroundHourlyForecast(latitude, longitude) { // gets da
                 //day2_temp = day1_high;
                 conditions = response.hourly_forecast[n].wx;
                 day2_cond = iconFromWeatherString(response.hourly_forecast[n].icon);
-                epochToTime
+                localStorage.setItem("day2_cond", day2_cond);
+                //epochToTime
                 timestamp = response.hourly_forecast[n].FCTTIME.epoch;
                 day2_info = response.hourly_forecast[n].FCTTIME.civil;
                 if (debug_flag > 0) {
@@ -597,6 +701,7 @@ function fetchWeatherundergroundHourlyForecast(latitude, longitude) { // gets da
                     //console.log("n " + n + " (array), m " + m + " (base), day = " + day);
                 }
                 day3_cond = iconFromWeatherString(response.hourly_forecast[n].icon);
+                localStorage.setItem("day3_cond", day3_cond);
                 temp = "L: " + day2_low;
                 //temp = response.hourly_forecast[n].temp.metric;
                 timestamp = response.hourly_forecast[n].FCTTIME.epoch;
@@ -640,6 +745,7 @@ function fetchWeatherundergroundHourlyForecast(latitude, longitude) { // gets da
         }
     };
     req.send(null);
+    updateInProgress = false;
 }
 
 function fetchWeatherundergroundDailyForecast(latitude, longitude) { // gets day 3, 4, 5
@@ -669,18 +775,24 @@ function fetchWeatherundergroundDailyForecast(latitude, longitude) { // gets day
                     }
                     if (response.location.country === "US") {
                         day2_high = parseInt(response.forecast.simpleforecast.forecastday[0].high.fahrenheit);
+                        localStorage.setItem("day2_high", day2_high);
                     } else {
                         day2_high = parseInt(response.forecast.simpleforecast.forecastday[0].high.celsius);
+                        localStorage.setItem("day2_high", day2_high);
                     }
 
                     if (response.location.country === "US") {
                         day2_low = parseInt(response.forecast.simpleforecast.forecastday[0].low.fahrenheit);
+                        localStorage.setItem("day2_low", day2_low);
                     } else {
                         day2_low = parseInt(response.forecast.simpleforecast.forecastday[0].low.celsius);
+                        localStorage.setItem("day2_low", day2_low);
                     }
 
                     day2_temp = day2_high;
+                    localStorage.setItem("day2_temp", day2_high);
                     day3_temp = day2_low;
+                    localStorage.setItem("day3_temp", day3_temp);
                     var m = 1
                             n = m -1 ;// array is day and night, in text rollup odd numbers night (contain low in temp), days (even numbers) contain high
                     day = 4;
@@ -689,7 +801,9 @@ function fetchWeatherundergroundDailyForecast(latitude, longitude) { // gets day
                     }
                     //                    icon = iconFromWeatherString(response.forecast.simpleforecast.forecastday[n].icon);
                     day4_cond = iconFromWeatherString(response.forecast.simpleforecast.forecastday[n].icon);
+                    localStorage.setItem("day4_cond", day4_cond);
                     day4_info = parseInt(response.forecast.simpleforecast.forecastday[n].date.epoch);
+                    localStorage.setItem("day4_info", day4_info);
                     //conditions = stripper(response.forecast.simpleforecast.forecastday[n].conditions);
                     high = parseInt(response.forecast.simpleforecast.forecastday[n].high.celsius);
                     low = parseInt(response.forecast.simpleforecast.forecastday[n].low.celsius);
@@ -707,6 +821,7 @@ function fetchWeatherundergroundDailyForecast(latitude, longitude) { // gets day
                         temperature = Math.round(tempResult);
                     }
                     day4_temp = temperature;
+                    localStorage.setItem("day4_temp", day4_temp);
 
 
                     n = m;
@@ -715,7 +830,9 @@ function fetchWeatherundergroundDailyForecast(latitude, longitude) { // gets day
                         console.log("n " + n + " (array), m " + m + " (base), day = " + day);
                     }
                     day5_cond = iconFromWeatherString(response.forecast.simpleforecast.forecastday[n].icon);
+                    localStorage.setItem("day5_cond", day5_cond);
                     day5_info = parseInt(response.forecast.simpleforecast.forecastday[n].date.epoch);
+                    localStorage.setItem("day5_info", day5_info);
                     //conditions = stripper(response.forecast.simpleforecast.forecastday[n].conditions);
                     high = parseInt(response.forecast.simpleforecast.forecastday[n].high.celsius);
                     low = parseInt(response.forecast.simpleforecast.forecastday[n].low.celsius);
@@ -732,6 +849,7 @@ function fetchWeatherundergroundDailyForecast(latitude, longitude) { // gets day
                         temperature = Math.round(tempResult);
                     }
                     day5_temp = temperature;
+                    localStorage.setItem("day5_temp", day5_temp);
 
                     if (debug_flag > 0) {
                         console.log("\n call inside of " + ownName +
@@ -762,6 +880,7 @@ function fetchWeatherundergroundDailyForecast(latitude, longitude) { // gets day
         }
     };
     req.send(null);
+    updateInProgress = false;
 }
 
 function fetchWeatherundergroundAstronomy(latitude, longitude) {
@@ -797,14 +916,22 @@ function fetchWeatherundergroundAstronomy(latitude, longitude) {
 
                     var offset = new Date().getTimezoneOffset() * 60;
                     current_epoch = Math.round(((Date.now()  / 1000) - offset));
-                    console.log("((Date.now()  / 1000) - offset) = " + current_epoch);
+                    weather_timestamp = current_epoch;
+                    if (debug_flag > 0) {
+                        console.log("((Date.now()  / 1000) - offset) = " + current_epoch);
+                    }
                     current_epoch = current_epoch - (current_epoch % 60);
-                    console.log("current epoch rounded to min = " + current_epoch);
+                    if (debug_flag > 0) {
+                        console.log("current epoch rounded to min = " + current_epoch);
+                    }
                     today_in_seconds = current_epoch % 86400;
-                    console.log("today_in_seconds = " + today_in_seconds);
+                    if (debug_flag > 0) {
+                        console.log("today_in_seconds = " + today_in_seconds);
+                    }
                     current_minute = Math.round((today_in_seconds % 3600) / 60);
                     current_hour = Math.round((today_in_seconds - (current_minute * 60))/3600);
-                    current_time = parseInt((current_hour * 100) + current_minute);
+                    current_time = parseInt((current_hour * 100) + current_minute); /// get timestamped epoch from WU, or "CURRENT TIME from JS" and send. Don't get time until inside req.response and then it should neever currently send a stale time.
+                    localStorage.setItem("current_time", current_time);
                     if (debug_flag > 0) {
                         console.log("\nFUNCTION NAME = " + ownName +
                                     "\ncurrent_epoch = " + current_epoch +
@@ -816,11 +943,18 @@ function fetchWeatherundergroundAstronomy(latitude, longitude) {
                     }
 
 
-                    var location;
+                    //var location;
                     location = response.location.city;
+                    localStorage.setItem("wu_location", location);
 
                     sunrise = parseInt(response.sun_phase.sunrise.hour + "" + response.sun_phase.sunrise.minute);
+                    localStorage.setItem("sunrise", sunrise);
                     sunset = parseInt(response.sun_phase.sunset.hour + "" + response.sun_phase.sunset.minute);
+                    localStorage.setItem("sunset", sunset);
+
+                    //overrwriting current_time with weather_timestamp becuase I don't have a tuple set up. Remember current_time is like 2008 for 8:08 PM. This will be 140603840 or something. Used to mark stale.
+                    current_time = weather_timestamp;
+                    localStorage.setItem("wu_weather_timestamp", weather_timestamp);
 
                     if (debug_flag > 0) {
                         //console.log("current_epoch = " + current_epoch + " current hour = " + current_hour + " current_minute = " + current_minute + " current_time " + current_time);
@@ -833,15 +967,17 @@ function fetchWeatherundergroundAstronomy(latitude, longitude) {
                                     "\nday5 temp " + day5_temp + " day5 temp " + day5_cond + " day5_info " + day5_info +
                                     "\nSunrise: " + sunrise +
                                     "\nSunset: " + sunset +
-                                    "\ncurrent_time: " + current_time +
+                                    "\ncurrent_time: " + current_time + " weather_timestamp" + weather_timestamp +
                                     "\nlocation " + location);
 
                         console.log("calling sendFMFutura, message payload:\n" + day1_temp + day1_cond + day2_temp + day2_cond + day3_temp + day3_cond + day4_temp + day4_cond + day4_info + day5_temp + day5_cond + day5_info + sunrise + sunset + current_time + location);
                     }
 
+                    fetchOpenweatherLocation(latitude, longitude);
 
 
-                    sendFMFutura(day1_temp, day1_cond, day2_temp, day2_cond, day2_info, day3_temp, day3_cond, day3_info, day4_temp, day4_cond, day4_info, day5_temp, day5_cond, day5_info, sunrise, sunset, current_time, location);
+
+//                    sendFMFutura(day1_temp, day1_cond, day2_temp, day2_cond, day2_info, day3_temp, day3_cond, day3_info, day4_temp, day4_cond, day4_info, day5_temp, day5_cond, day5_info, sunrise, sunset, current_time, location);
 
                     /*   } else {
                            console.log("response.response.error.type " + response.response.error.type + " in function " + ownName);
@@ -859,27 +995,138 @@ function fetchWeatherundergroundAstronomy(latitude, longitude) {
         }
     };
     req.send(null);
+    updateInProgress = false;
 }
 
-function sendFMFutura(day1_temp, day1_cond, day2_temp, day2_cond, day2_info, day3_temp, day3_cond, day3_info, day4_temp, day4_cond, day4_info, day5_temp, day5_cond, day5_info, sunrise, sunset, current_time, location) {
-
+function fetchOpenweatherLocation(latitude, longitude) {       // sends days 3, 4, 5
     var ownName = arguments.callee.toString();
     ownName = ownName.substr('function '.length);        // trim off "function "
     ownName = ownName.substr(0, ownName.indexOf('('));        // trim off everything after the function name
+    var debug_flag = 1;
     if (debug_flag > 0) {
-        console.log("\nFUNCTION NAME = " + ownName +
-                    "\ndebug flag = " + debug_flag +
-                    "\nday1 temp " + day1_temp + " day1 cond " + day1_cond +
-                    "\nday2 temp " + day2_temp + " day2 cond " + day2_cond + " day2 info " + day2_info +
-                    "\nday3 temp " + day3_temp + " day3 cond " + day3_cond + " day3 info " + day3_info +
-                    "\nday4 temp " + day4_temp + " day4 cond " + day4_cond + " day4_ifno " + day4_info +
-                    "\nday5 temp " + day5_temp + " day5 temp " + day5_cond + " day5_info " + day5_info +
-                    "\nSunrise: " + sunrise +
-                    "\nSunset: " + sunset +
-                    "\ncurrent_time: " + current_time +
-                    "\nlocation: " + location);
+        console.log("FUNCTION NAME = " + ownName);
     }
-    Pebble.sendAppMessage({
+
+
+    var req = new XMLHttpRequest();
+    req.open("GET", "http://api.openweathermap.org/data/2.5/forecast/daily?lat=" + latitude + "&lon=" + longitude + "&cnt=10&APPID=9f001a597927140d919cc512193dadd2", true);
+
+    req.onload = function(e) {
+        if (req.readyState == 4) {
+            if (req.status == 200) {
+                var response = JSON.parse(req.responseText);
+                if (debug_flag > 0) {
+                    console.log(ownName + ", " + req.responseText.length);
+                }
+                if (req.responseText.length > 100) {
+                    //location = location + "/" + response.city.name;
+
+                    location = response.city.name;
+                    //ow_location = response.city.name;
+
+                    localStorage.setItem("ow_location", location);
+
+//                                        sendFMFutura(day1_temp, day1_cond, day2_temp, day2_cond, day2_info, day3_temp, day3_cond, day3_info, day4_temp, day4_cond, day4_info, day5_temp, day5_cond, day5_info, sunrise, sunset, current_time, location);
+                    sendFMFutura();
+                    //fetchWeatherundergroundAstronomy(latitude, longitude);
+                } else {
+                    console.log("fail responseText.lenght > 100 -" + ownName);
+                }
+            } else {
+                console.log("fail 200: " + ownName);
+            }
+        } else {
+            console.log("fail readyState == 4 " + ownName);
+        }
+    };
+    req.send(null);
+    updateInProgress = false;
+}
+
+//function sendFMFutura(day1_temp, day1_cond, day2_temp, day2_cond, day2_info, day3_temp, day3_cond, day3_info, day4_temp, day4_cond, day4_info, day5_temp, day5_cond, day5_info, sunrise, sunset, current_time, location) {
+
+function sendFMFutura() {
+
+    console.log("SEND FM FUTURA FUNCTION");
+
+    var now = new Date().getTime();
+    now = parseInt(Math.round(now / 1e3));
+    lastSend = parseInt(localStorage.getItem("lastSend"));
+    console.log("(lastSend (" + lastSend + ") + 10) - now (" + now + ") = " + ((lastSend + 10) - now));
+    if (((lastSend) + 10) < now) { // then do all the stuff
+        console.log("(lastSend + 10) - now = " + ((lastSend + 10) - now));
+        console.log("doing, becuase lastsend + 10 > now");
+
+        var debug_flag = 1;
+        if (debug_flag > 0) {
+            console.log("localStorage.getItem day1_temp = " + parseInt(localStorage.getItem("day1_temp")));
+            console.log("localStorage.getItem day1_cond = " + parseInt(localStorage.getItem("day1_cond")));
+            console.log("localStorage.getItem day2_temp = " + parseInt(localStorage.getItem("day2_temp")));
+            //console.log("localStorage.getItem day2_info = "High";
+            console.log("localStorage.getItem day2_cond = " + parseInt(localStorage.getItem("day2_cond")));
+            console.log("localStorage.getItem day3_temp = " + parseInt(localStorage.getItem("day3_temp")));
+            console.log("localStorage.getItem day3_cond = " + parseInt(localStorage.getItem("day3_cond")));
+            //console.log("localStorage.getItem day3_info = "Low";
+            console.log("localStorage.getItem day4_temp = " + parseInt(localStorage.getItem("day4_temp")));
+            console.log("localStorage.getItem day4_cond = " + parseInt(localStorage.getItem("day4_cond")));
+            console.log("localStorage.getItem day4_info = " + localStorage.getItem("day4_info"));
+            console.log("localStorage.getItem day5_temp = " + parseInt(localStorage.getItem("day5_temp")));
+            console.log("localStorage.getItem day5_cond = " + parseInt(localStorage.getItem("day5_cond")));
+            console.log("localStorage.getItem day5_info = " + localStorage.getItem("day5_info"));
+            console.log("localStorage.getItem sunrise = "   + parseInt(localStorage.getItem("sunrise")));
+            console.log("localStorage.getItem sunset = "    + parseInt(localStorage.getItem("sunset")));
+            console.log("localStorage.getItem location = "  + localStorage.getItem("ow_location") + "/" + localStorage.getItem("wu_location"));
+        }
+
+
+        //read all from storage
+        var day1_temp = parseInt(localStorage.getItem("day1_temp"));
+        var day1_cond = parseInt(localStorage.getItem("day1_cond"));
+        var day2_temp = parseInt(localStorage.getItem("day2_temp"));
+        var day2_info = "High";
+        var day2_cond = parseInt(localStorage.getItem("day2_cond"));
+        var day3_temp = parseInt(localStorage.getItem("day3_temp"));
+        var day3_cond = parseInt(localStorage.getItem("day3_cond"));
+        var day3_info = "Low";
+        var day4_temp = parseInt(localStorage.getItem("day4_temp"));
+        var day4_cond = parseInt(localStorage.getItem("day4_cond"));
+        var day4_info = parseInt(localStorage.getItem("day4_info"));
+        var day5_temp = parseInt(localStorage.getItem("day5_temp"));
+        var day5_cond = parseInt(localStorage.getItem("day5_cond"));
+        var day5_info = parseInt(localStorage.getItem("day5_info"));
+        var current_time = parseInt(localStorage.getItem("current_time"));
+        var sunrise = parseInt(localStorage.getItem("sunrise"));
+        var sunset = parseInt(localStorage.getItem("sunset"));
+        var location = localStorage.getItem("ow_location") + "/" + localStorage.getItem("wu_location");
+
+        var ownName = arguments.callee.toString();
+        ownName = ownName.substr('function '.length);        // trim off "function "
+        ownName = ownName.substr(0, ownName.indexOf('('));        // trim off everything after the function name
+
+
+
+
+
+        // if (debug_flag > -1) {
+        /*    console.log("\nFUNCTION NAME = " + ownName +
+                        "\ndebug flag = " + debug_flag +
+                        "\nday1 temp " + day1_temp + " day1 cond " + day1_cond +
+                        "\nday2 temp " + day2_temp + " day2 cond " + day2_cond + " day2 info " + day2_info +
+                        "\nday3 temp " + day3_temp + " day3 cond " + day3_cond + " day3 info " + day3_info +
+                        "\nday4 temp " + day4_temp + " day4 cond " + day4_cond + " day4_ifno " + day4_info +
+                        "\nday5 temp " + day5_temp + " day5 temp " + day5_cond + " day5_info " + day5_info +
+                        "\nSunrise: " + sunrise +
+                        "\nSunset: " + sunset +
+                        "\ncurrent_time: " + current_time +
+                        "\nlocation: " + location); */
+        //console.log("day2_info = " + day2_info);
+        //console.log("day3_info = " + day3_info);
+        //}
+
+
+
+
+        Pebble.sendAppMessage({
 "day1_temp": day1_temp,
 "day1_cond": day1_cond,
 "day2_temp": day2_temp,
@@ -898,17 +1145,32 @@ function sendFMFutura(day1_temp, day1_cond, day2_temp, day2_cond, day2_info, day
 "sunset": sunset,
 "current_time": current_time,
 "location": location
-    });
-    var now = new Date().getTime();
-    now = parseInt(Math.round(now / 1e3));
-    localStorage.setItem("lastUpdate", parseInt(now));
-    updateInProgress = false;
-    if (debug_flag > 0) {
-        console.log("last update set to " + localStorage.getItem("lastUpdate") + ", ");
-        console.log(parseInt(now) - parseInt(localStorage.getItem("lastUpdate")) + " seconds ago");
-        console.log("now = " + parseInt(now));
+        });
+
+        now = new Date().getTime();
+        now = parseInt(Math.round(now / 1e3));
+        localStorage.setItem("lastSend", parseInt(now));
+        lastSend = localStorage.getItem("lastSend");
+        updateInProgress = false;
+        if (debug_flag > -1) {
+            console.log("lastSend updated, set to " + lastSend);
+            console.log("lastUpdate updated, set to " + localStorage.getItem("lastUpdate") + ", which was ");
+            console.log(parseInt(now) - parseInt(localStorage.getItem("lastUpdate")) + " seconds ago");
+            console.log("now = " + parseInt(now));
+        }
+
+    } else {
+
+        //skip everything becuase two messages on top of each other might be the cause of the crash
+        //so wait 10 seconds before sending again
+        updateInProgress = false;
+        console.log("ELSE skipping, sent less than 10 seconds ago, update in progress set to false");
+        console.log("(lastSend + 10) - now = " + ((lastSend + 10) - now));
+        console.log("(lastSend (" + lastSend + ") + 10) - now (" + now + ") = " + ((lastSend + 10) - now));
+        console.log("so lastSend + 10 > now, lastSend " + lastSend + " > now " + now + "lastSend + 10 = " + (lastSend + 10));
     }
-    console.log(ownName + " message sent to phone, update in progress = false");
+    updateInProgress = false;
+    console.log(ownName + " closing ... setting update in progress = " + updateInProgress);
 }
 
 

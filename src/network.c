@@ -4,13 +4,21 @@
 #include "bluetooth.h"
 #include "main.h"
 int requests_queued = 0;
+int crash_supressor = 0;
 
 static void appmsg_in_received(DictionaryIterator *received, void *context) {
+
+    if (crash_supressor < -1) {
+        crash_supressor = crash_supressor + 1;
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "crash supressor = %i", crash_supressor);
+    } else {
     int saver = debug_flag;
     debug_flag = debug_flag;
+    debug_flag = 1; 
     requests_queued = 0;
     display_counter = 3;
-    if (debug_flag > -1) {
+    stale = false;
+    if (debug_flag > 0) {
         APP_LOG(APP_LOG_LEVEL_DEBUG, "In received.");
     }
     WeatherData *weather_data = (WeatherData*) context;
@@ -95,60 +103,64 @@ static void appmsg_in_received(DictionaryIterator *received, void *context) {
     if (debug_flag > 0) {
         APP_LOG(APP_LOG_LEVEL_DEBUG, "dictionary iteration complete");
 
-        APP_LOG(APP_LOG_LEVEL_DEBUG, "Got message with keys... day1_temp=%p day1_cond%p",
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "Got message with keys... day1_temp%p day1_cond%p",
                 day1_temp_tuple, day1_cond_tuple);
-        APP_LOG(APP_LOG_LEVEL_DEBUG, "Got message with keys... day2_temp=%p day2_cond%p day2_info=%p",
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "Got message with keys... day2_temp%p day2_cond%p day2_info%p",
                 day2_temp_tuple, day2_cond_tuple, day2_info_tuple);
-        APP_LOG(APP_LOG_LEVEL_DEBUG, "Got message with keys... day3_temp=%p day3_cond%p day3_info=%p",
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "Got message with keys... day3_temp%p day3_cond%p day3_info%p",
                 day3_temp_tuple, day3_cond_tuple, day3_info_tuple);
-        APP_LOG(APP_LOG_LEVEL_DEBUG, "Got message with keys... day4_temp=%p day4_cond%p day4_time=%p",
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "Got message with keys... day4_temp%p day4_cond%p day4_time%p",
                 day4_temp_tuple, day4_cond_tuple, day4_time_tuple);
-        APP_LOG(APP_LOG_LEVEL_DEBUG, "Got message with keys... day5_temp=%p day5_cond%p day5_time=%p",
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "Got message with keys... day5_temp%p day5_cond%p day5_time%p",
                 day5_temp_tuple, day5_cond_tuple, day5_time_tuple);
-        APP_LOG(APP_LOG_LEVEL_DEBUG, "Got message with keys... location=%p", location_tuple);
-        APP_LOG(APP_LOG_LEVEL_DEBUG, "Got message with keys... error=%p", error_tuple);
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "Got message with keys... sunrise%p sunset%p current_time%p location%p", sunrise_tuple, sunset_tuple, current_time_tuple, location_tuple);
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "Got message with keys... location%p", location_tuple);
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "Got message with keys... error%p", error_tuple);
     }
+    
+    //if lastin less than stale, ignore
 
-    if (day1_temp_tuple && day1_cond_tuple) {
+    if (day1_temp_tuple && day1_cond_tuple && day2_temp_tuple && day3_cond_tuple && day2_info_tuple && day3_temp_tuple && day3_cond_tuple && day3_info_tuple && day4_temp_tuple && day4_cond_tuple && day4_time_tuple && day5_temp_tuple && day5_cond_tuple && day5_time_tuple && sunrise_tuple && sunset_tuple && current_time_tuple && location_tuple) {
         weather_data->day1_temp = day1_temp_tuple->value->int32;
-        weather->day1_cond = day1_cond_tuple->value->int32;
-        weather->day2_temp = day2_temp_tuple->value->int32;
-        weather->day2_cond = day2_cond_tuple->value->int32;
-        weather->day2_info = day2_info_tuple->value->cstring;
-        weather->day3_temp = day3_temp_tuple->value->int32;
-        weather->day3_cond = day3_cond_tuple->value->int32;
-        weather->day3_info = day3_info_tuple->value->cstring;
-        weather->day4_temp = day4_temp_tuple->value->int32;
-        weather->day4_cond = day4_cond_tuple->value->int32;
-        weather->day4_time = day4_time_tuple->value->int32;
-        weather->day5_temp = day5_temp_tuple->value->int32;
-        weather->day5_cond = day5_cond_tuple->value->int32;
-        weather->day5_time = day5_time_tuple->value->int32;
-        weather->sunrise = sunrise_tuple->value->int32;
-        weather->sunset = sunset_tuple->value->int32;
-        weather->current_time = current_time_tuple->value->int32;
-        weather->location = location_tuple->value->cstring;
-        weather->error = WEATHER_E_OK;
-        weather->updated = time(NULL);
-        if (debug_flag > 0) {
-            APP_LOG(APP_LOG_LEVEL_DEBUG, "before if day 1 temperature %i and condition %i", weather->day1_temp, weather->day1_cond);
-            APP_LOG(APP_LOG_LEVEL_DEBUG, "before if day 2 temperature %i and condition %i, info %s", weather->day2_temp, weather->day2_cond, weather->day2_info);
-            APP_LOG(APP_LOG_LEVEL_DEBUG, "before if day 3 temperature %i and condition %i, info %s", weather->day3_temp, weather->day3_cond, weather->day3_info);
-            APP_LOG(APP_LOG_LEVEL_DEBUG, "before if day 4 temperature %i and condition %i and time %i", weather->day4_temp, weather->day4_cond, weather->day4_time);
-            APP_LOG(APP_LOG_LEVEL_DEBUG, "before if day 5 temperature %i and condition %i and time %i", weather->day5_temp, weather->day5_cond, weather->day5_time);
-            APP_LOG(APP_LOG_LEVEL_DEBUG, "before if astro location %s", weather->location);
-        }
+        weather_data->day1_cond = day1_cond_tuple->value->int32;
+        weather_data->day2_temp = day2_temp_tuple->value->int32;
+        weather_data->day2_cond = day2_cond_tuple->value->int32;
+        weather_data->day2_info = day2_info_tuple->value->cstring;
+        weather_data->day3_temp = day3_temp_tuple->value->int32;
+        weather_data->day3_cond = day3_cond_tuple->value->int32;
+        weather_data->day3_info = day3_info_tuple->value->cstring;
+        weather_data->day4_temp = day4_temp_tuple->value->int32;
+        weather_data->day4_cond = day4_cond_tuple->value->int32;
+        weather_data->day4_time = day4_time_tuple->value->int32;
+        weather_data->day5_temp = day5_temp_tuple->value->int32;
+        weather_data->day5_cond = day5_cond_tuple->value->int32;
+        weather_data->day5_time = day5_time_tuple->value->int32;
+        weather_data->sunrise = sunrise_tuple->value->int32;
+        weather_data->sunset = sunset_tuple->value->int32;
+        weather_data->current_time = current_time_tuple->value->int32;
+        weather_data->location = location_tuple->value->cstring;
+        weather_data->error = WEATHER_E_OK;
+        weather_data->updated = time(NULL);
+
+         if (debug_flag > 0) {
+            APP_LOG(APP_LOG_LEVEL_DEBUG, "before if day 1 temperature %i and condition %i", weather_data->day1_temp, weather_data->day1_cond);
+            APP_LOG(APP_LOG_LEVEL_DEBUG, "before if day 2 temperature %i and condition %i, info %s", weather_data->day2_temp, weather_data->day2_cond, weather_data->day2_info);
+            APP_LOG(APP_LOG_LEVEL_DEBUG, "before if day 3 temperature %i and condition %i, info %s", weather_data->day3_temp, weather_data->day3_cond, weather_data->day3_info);
+            APP_LOG(APP_LOG_LEVEL_DEBUG, "before if day 4 temperature %i and condition %i and time %i", weather_data->day4_temp, weather_data->day4_cond, weather_data->day4_time);
+            APP_LOG(APP_LOG_LEVEL_DEBUG, "before if day 5 temperature %i and condition %i and time %i", weather_data->day5_temp, weather_data->day5_cond, weather_data->day5_time);
+            APP_LOG(APP_LOG_LEVEL_DEBUG, "before if astro location %s", weather_data->location);
+        } 
     }
     else if (error_tuple) {
-        weather->error = WEATHER_E_NETWORK;
+        weather_data->error = WEATHER_E_NETWORK;
         APP_LOG(APP_LOG_LEVEL_DEBUG, "Got error %s", error_tuple->value->cstring);
     }
     else {
-        weather->error = WEATHER_E_PHONE;
-        APP_LOG(APP_LOG_LEVEL_DEBUG, "Got message with unknown keys... day1_temp=%p day1_cond%p day2_temp=%p day2_cond%p day3_temp=%p day3_cond%p location_tuple=%p error=%p",
+        weather_data->error = WEATHER_E_PHONE;
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "Got message with unknown keys... day1_temp%p day1_cond%p day2_temp%p day2_cond%p day3_temp%p day3_cond%p location_tuple%p error%p",
                 day1_temp_tuple, day1_cond_tuple, day2_temp_tuple, day2_cond_tuple, day3_temp_tuple, day3_cond_tuple, location_tuple, error_tuple);
+    }    debug_flag = saver;
     }
-    debug_flag = saver;
 }
 
 static void appmsg_in_dropped(AppMessageResult reason, void *context) {
@@ -170,16 +182,20 @@ static void appmsg_out_failed(DictionaryIterator *failed, AppMessageResult reaso
 
     switch (reason) {
     case APP_MSG_NOT_CONNECTED:
-        weather->error = WEATHER_E_DISCONNECTED;
+        weather_data->error = WEATHER_E_DISCONNECTED;
+        weather_data->updated = 0;
         request_weather();
         break;
     case APP_MSG_SEND_REJECTED:
+                        weather_data->updated = 0;
     case APP_MSG_SEND_TIMEOUT:
-        weather->error = WEATHER_E_PHONE;
+        weather_data->error = WEATHER_E_PHONE;
+        weather_data->updated = 0;
         request_weather();
         break;
     default:
-        weather->error = WEATHER_E_PHONE;
+        weather_data->error = WEATHER_E_PHONE;
+        weather_data->updated = 0;
         request_weather();
         break;
     }
@@ -236,7 +252,7 @@ void close_network()
 
 void request_weather()
 {
-    if (requests_queued < 11) {
+    if (requests_queued < 20) {
         DictionaryIterator *iter;
         app_message_outbox_begin(&iter);
         dict_write_uint8(iter, KEY_REQUEST_UPDATE, 92);
