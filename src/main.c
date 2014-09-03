@@ -88,6 +88,7 @@ void accel_tap_handler(AccelAxisType axis, int32_t direction) {
 }
 
 int epochToHourMin(int epoch) {
+	debug_flag = 0; 
     if (debug_flag > 0) {
         APP_LOG(APP_LOG_LEVEL_DEBUG, "epoch = %i", epoch);
     }
@@ -127,24 +128,14 @@ static void handle_tick(struct tm *tick_time, TimeUnits units_changed) {
     int currentInt = time(NULL);
     //int delay = (delay_min * 60 * 2) + 0;
     int delay = (delay_min + 1) * 60;
+
+//	debug_flag = 1; 
     
 
+	if (units_changed & MINUTE_UNIT) {
+	    //if (weather_timestamp - (currentInt - (delay * 10)) > 0)  {stale = false;} else {stale = true;}
 
-    
-    if (units_changed & MINUTE_UNIT) {
-
-            if (weather_timestamp - (currentInt - (delay * 10)) > 0)  {
-            stale = false;
-            } else {
-            stale = true;
-            }
-        
-        if (debug_flag > 0) {
-        APP_LOG(APP_LOG_LEVEL_DEBUG, "current_time tuple = %i", weather_data->current_time);
-        APP_LOG(APP_LOG_LEVEL_DEBUG, "int weather_timestamp = %i", weather_timestamp);
-        APP_LOG(APP_LOG_LEVEL_DEBUG, "stale countdown (if neg, it's stale) = %i", weather_timestamp - (currentInt - delay));
-        APP_LOG(APP_LOG_LEVEL_DEBUG, "stale = %i", stale);
-        }
+	    debug_flag = debug_return; 
         // Update the time - Fix to deal with 12 / 24 centering bug
         time_t currentTime = time(0);
         struct tm *currentLocalTime = localtime(&currentTime);
@@ -161,6 +152,15 @@ static void handle_tick(struct tm *tick_time, TimeUnits units_changed) {
         }
         text_layer_set_text(time_layer, time_text);
     }
+	
+	   if (debug_flag > 0) {
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "%i = current_time tuple", weather_data->current_time);
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "%i int weather_timestamp", weather_timestamp);
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "%i int currentInt", currentInt);
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "%i int delay", delay);
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "%i stale countdown (if neg, it's stale)", weather_timestamp - (currentInt - delay));
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "%i stale (1 = stale, 0 = not stale", stale);
+        }
     
     if (units_changed & DAY_UNIT) {
         // Update the date - Without a leading 0 on the day of the month

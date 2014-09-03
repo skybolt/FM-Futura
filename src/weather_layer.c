@@ -60,7 +60,7 @@ WeatherLayer *weather_layer_create(GRect frame, bool is_small) {
     }
 
     if (is_small == true) {
-        APP_LOG(APP_LOG_LEVEL_DEBUG, "creating small temp frame");
+	    if (debug_flag > 0) {APP_LOG(APP_LOG_LEVEL_DEBUG, "creating small temp frame");}
         wld->temp_layer_background = text_layer_create(GRect(0, 10, 72, 68));
         text_layer_set_background_color(wld->temp_layer_background, GColorWhite);
         wld->temp_layer = text_layer_create(GRect(3, 11, 60, 60));
@@ -144,6 +144,7 @@ void weather_layer_set_info(WeatherLayer *weather_layer, const char *string) {
 
 void weather_layer_set_time(WeatherLayer *weather_layer, uint32_t timestamp) {
     WeatherLayerData *wld = layer_get_data(weather_layer);
+	debug_flag = 0; 
     
     char time_text[] = "Day 00:00";
     time_t weekday_t = timestamp;
@@ -213,6 +214,7 @@ void weather_layer_destroy(WeatherLayer* weather_layer) {
 uint8_t weather_icon_for_condition(int c, bool night_time) {
     // Thunderstorm
 
+	debug_flag = 0; 
     if (c < 1) {
         if (debug_flag > 0) {
             APP_LOG(APP_LOG_LEVEL_DEBUG, "WEATHER_ICON_CLOUD_ERROR");

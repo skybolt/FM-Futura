@@ -14,7 +14,7 @@ static void appmsg_in_received(DictionaryIterator *received, void *context) {
     } else {
     int saver = debug_flag;
     debug_flag = debug_flag;
-    debug_flag = 1; 
+    debug_flag = 0; 
     requests_queued = 0;
     display_counter = 3;
     stale = false;

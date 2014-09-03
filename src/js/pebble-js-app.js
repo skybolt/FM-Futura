@@ -1,7 +1,6 @@
 //working set version
 
-
-//var day1_temp, day1_cond, day2_temp, day2_cond, day3_temp, day3_cond, day4_temp, day4_cond, day4_info, day5_temp, day5_cond, day5_info, sunrise, sunset, current_time, current_hour, current_minute, current_epoch, pretty_hour, weather_timestamp, location, wu_location, ow_location;
+//var day1_temp, day1_conTIONd, day2_temp, day2_cond, day3_temp, day3_cond, day4_temp, day4_cond, day4_info, day5_temp, day5_cond, day5_info, sunrise, sunset, current_time, current_hour, current_minute, current_epoch, pretty_hour, weather_timestamp, location, wu_location, ow_location;
 var debug_flag = 0;
 var provider_flag = 1;
 var updateInProgress = false;
@@ -12,7 +11,6 @@ if (provider_flag == 0) {
 if (provider_flag == 1) {
     console.log("provider: weatherunderground.com");
 }
-
 Pebble.addEventListener("ready", function(e) {
     console.log("ready, starting ...");
     checkRequestTime();
@@ -67,7 +65,7 @@ function checkRequestTime() { //check to see if its too soon to request an updat
     var ownName = arguments.callee.toString();
     ownName = ownName.substr('function '.length);        // trim off "function "
     ownName = ownName.substr(0, ownName.indexOf('('));        // trim off everything after the function name
-    var debug_flag = 1;
+    var debug_flag = 0;
     if (debug_flag > 0) {
         console.log("FUNCTION NAME = " + ownName + " debug_flag " + debug_flag);
         console.log("Should I start a request?");
@@ -118,9 +116,10 @@ function checkRequestTime() { //check to see if its too soon to request an updat
 
     var nextUpdate = lastUpdate + delay;
     var stale = parseInt(nextUpdate - now);
+	if (debug_flag > 0) {
     console.log("stale countdown = " + stale);
     console.log("delay - stale = (count up) " + (delay - stale));
-
+	}
     //if ((lastUpdate + delay) < now) {
     //if (nextUpdate < now) {
     if (stale < 0) {
@@ -151,9 +150,10 @@ function checkRequestTime() { //check to see if its too soon to request an updat
         //two above lines same way?
         //don't want to do fresh routine until ripe. Until it's been fresh for at least 10 seconds.
         // this is to avoid collisions on the message send, which may cause crashes.
+        if (debug_flag > 0) {       
         console.log("NO, do NOT start new request, stale > 0, not stale");
         console.log("instead, just re-send FM FUTURA DATA");
-        if (debug_flag > -1) {
+
             //console.log("stale not larger than now + 10");
             //console.log("debug_flag = " + debug_flag);
             console.log("please wait " + stale + " seconds");
@@ -180,7 +180,7 @@ function checkRequestTime() { //check to see if its too soon to request an updat
 
 
 function updateLocation() {
-    var debug_flag = 1;
+    var debug_flag = 0;
     if (debug_flag > 0) {
         console.log("(updateLocation) checking to see if updateInProgress");
         console.log("updateInProgress = " + updateInProgress);
@@ -198,11 +198,11 @@ function updateLocation() {
             console.log("KILLING REQUEST, either in progress or too soon. Not starting a new request");
         }
     }
-    console.log("updateLocation closing -- updateInProgress = " + updateInProgress);
+	if (debug_flag > 0) {console.log("updateLocation closing -- updateInProgress = " + updateInProgress);}
 }
 
 function updateWeather() {
-    var debug_flag = 1;
+    var debug_flag = 0;
     if (debug_flag > 0) {
         console.log("(updateWeather) checking to see if updateInProgress");
         console.log("updateInProgress = " + updateInProgress);
@@ -230,9 +230,10 @@ function getLocation_locationSuccess(pos) {
         console.log("Location Success!!\nGot coordinates:\n" + JSON.stringify(coordinates));
     }
     fetchOpenweatherLocation(coordinates.latitude, coordinates.longitude);
+	if (debug_flag > 0) {
     console.log("getting openweather LCOATION ONLY");
     console.log("new latitude = " + coordinates.latitude + " longitude " + coordinates.longitude);
-
+	}
 }
 
 function locationSuccess(pos) {
@@ -260,7 +261,7 @@ function locationError(err) {
 var temperature, icon, city, sunrise, sunset, condition, current_time, country;
 
 function fetchOpenweatherConditions(latitude, longitude) {
-    var debug_flag = 1;
+    var debug_flag = 0;
     var ownName = arguments.callee.toString();
     ownName = ownName.substr('function '.length);        // trim off "function "
     ownName = ownName.substr(0, ownName.indexOf('('));        // trim off everything after the function name
@@ -345,7 +346,7 @@ function fetchOpenweatherConditions(latitude, longitude) {
 }
 
 function fetchOpenweatherHourlyForecast(latitude, longitude) {
-    var debug_flag = 1;
+    var debug_flag = 0;
     var ownName = arguments.callee.toString();
     ownName = ownName.substr('function '.length);        // trim off "function "
     ownName = ownName.substr(0, ownName.indexOf('('));        // trim off everything after the function name
@@ -1002,7 +1003,7 @@ function fetchOpenweatherLocation(latitude, longitude) {       // sends days 3, 
     var ownName = arguments.callee.toString();
     ownName = ownName.substr('function '.length);        // trim off "function "
     ownName = ownName.substr(0, ownName.indexOf('('));        // trim off everything after the function name
-    var debug_flag = 1;
+    var debug_flag = 0;
     if (debug_flag > 0) {
         console.log("FUNCTION NAME = " + ownName);
     }
@@ -1047,18 +1048,20 @@ function fetchOpenweatherLocation(latitude, longitude) {       // sends days 3, 
 
 function sendFMFutura() {
 
-    console.log("SEND FM FUTURA FUNCTION");
 
     var now = new Date().getTime();
     now = parseInt(Math.round(now / 1e3));
     lastSend = parseInt(localStorage.getItem("lastSend"));
-    console.log("(lastSend (" + lastSend + ") + 10) - now (" + now + ") = " + ((lastSend + 10) - now));
+	if (debug_flag) {console.log("(lastSend (" + lastSend + ") + 10) - now (" + now + ") = " + ((lastSend + 10) - now));}
     if (((lastSend) + 10) < now) { // then do all the stuff
+	    if (debug_flag > 0) {
         console.log("(lastSend + 10) - now = " + ((lastSend + 10) - now));
         console.log("doing, becuase lastsend + 10 > now");
-
-        var debug_flag = 1;
+}
+        var debug_flag = 0;
         if (debug_flag > 0) {
+		   console.log("SEND FM FUTURA FUNCTION");
+
             console.log("localStorage.getItem day1_temp = " + parseInt(localStorage.getItem("day1_temp")));
             console.log("localStorage.getItem day1_cond = " + parseInt(localStorage.getItem("day1_cond")));
             console.log("localStorage.getItem day2_temp = " + parseInt(localStorage.getItem("day2_temp")));
@@ -1152,7 +1155,7 @@ function sendFMFutura() {
         localStorage.setItem("lastSend", parseInt(now));
         lastSend = localStorage.getItem("lastSend");
         updateInProgress = false;
-        if (debug_flag > -1) {
+        if (debug_flag > 0) {
             console.log("lastSend updated, set to " + lastSend);
             console.log("lastUpdate updated, set to " + localStorage.getItem("lastUpdate") + ", which was ");
             console.log(parseInt(now) - parseInt(localStorage.getItem("lastUpdate")) + " seconds ago");
@@ -1164,13 +1167,15 @@ function sendFMFutura() {
         //skip everything becuase two messages on top of each other might be the cause of the crash
         //so wait 10 seconds before sending again
         updateInProgress = false;
+	    if (debug_flag > 0) {
         console.log("ELSE skipping, sent less than 10 seconds ago, update in progress set to false");
         console.log("(lastSend + 10) - now = " + ((lastSend + 10) - now));
         console.log("(lastSend (" + lastSend + ") + 10) - now (" + now + ") = " + ((lastSend + 10) - now));
-        console.log("so lastSend + 10 > now, lastSend " + lastSend + " > now " + now + "lastSend + 10 = " + (lastSend + 10));
+        console.log("so lastSend + 10 > now, lastSend " + lastSend + " > now " + now + "lastSend + 10 = " + (lastSend + 10)); 
+	    }
     }
     updateInProgress = false;
-    console.log(ownName + " closing ... setting update in progress = " + updateInProgress);
+    //console.log(ownName + " closing ... setting update in progress = " + updateInProgress);
 }
 
 
