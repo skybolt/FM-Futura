@@ -32,14 +32,14 @@ static InverterLayer *white_layer;
 
 static int window_step = 0;
 static int window_time = 0;
-static int delay_min = 1;
+static int delay_min = 10;
 static int display_init = 3;
 int debug_flag = 0;
 int debug_return = 0;
 
 static bool night_time = false;
 static bool day_time = true;
-bool stale = false;
+bool stale = true;
 bool big = false;
 bool small = true;
 
@@ -129,11 +129,14 @@ static void handle_tick(struct tm *tick_time, TimeUnits units_changed) {
     //int delay = (delay_min * 60 * 2) + 0;
     int delay = (delay_min + 1) * 60;
 
-//	debug_flag = 1; 
+//	debug_flag = 1;
     
 
 	if (units_changed & MINUTE_UNIT) {
-	    //if (weather_timestamp - (currentInt - (delay * 10)) > 0)  {stale = false;} else {stale = true;}
+        
+        request_weather();
+//	    if (weather_timestamp - (currentInt - (delay * 10)) > 0)  {stale = false;} else {stale = true;}
+        //APP_LOG(APP_LOG_LEVEL_DEBUG, "%i", (weather_timestamp - (currentInt - (delay * 10))));
 
 	    debug_flag = debug_return; 
         // Update the time - Fix to deal with 12 / 24 centering bug
@@ -152,15 +155,18 @@ static void handle_tick(struct tm *tick_time, TimeUnits units_changed) {
         }
         text_layer_set_text(time_layer, time_text);
     }
-	
+    
+//    debug_flag = 1;
 	   if (debug_flag > 0) {
-        APP_LOG(APP_LOG_LEVEL_DEBUG, "%i = current_time tuple", weather_data->current_time);
-        APP_LOG(APP_LOG_LEVEL_DEBUG, "%i int weather_timestamp", weather_timestamp);
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "%i = current_epoch tuple", weather_data->current_epoch);
+        //APP_LOG(APP_LOG_LEVEL_DEBUG, "%i int weather_timestamp", weather_timestamp);
         APP_LOG(APP_LOG_LEVEL_DEBUG, "%i int currentInt", currentInt);
-        APP_LOG(APP_LOG_LEVEL_DEBUG, "%i int delay", delay);
-        APP_LOG(APP_LOG_LEVEL_DEBUG, "%i stale countdown (if neg, it's stale)", weather_timestamp - (currentInt - delay));
+        //APP_LOG(APP_LOG_LEVEL_DEBUG, "%i int delay", delay);
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "%i stale countdown (if neg, it's stale)", weather_data->current_epoch - (currentInt - delay)   );
         APP_LOG(APP_LOG_LEVEL_DEBUG, "%i stale (1 = stale, 0 = not stale", stale);
         }
+    if (weather_data->current_epoch - (currentInt - delay) > 0)  {stale = false;} else {stale = true;}
+    
     
     if (units_changed & DAY_UNIT) {
         // Update the date - Without a leading 0 on the day of the month
@@ -175,7 +181,17 @@ static void handle_tick(struct tm *tick_time, TimeUnits units_changed) {
     int current_time = epochToHourMin(currentInt);
     //if (weather_data->current_time < weather_data->sunrise || weather_data->current_time > weather_data->sunset) {
     //if (currentInt < weather_data->sunrise || currentInt > weather_data->sunset) {
-
+    //debug_flag = 4;
+    
+    if (debug_flag > 3) {
+        if (currentInt % 3 == 0) {
+        night_time = rand() % 2;
+        day_time = night_time + 1;
+        layer_set_hidden(conditions_layer, false);  //bottom one?
+        layer_set_hidden(hourly_layer, rand() % 2);  //over conditions
+        layer_set_hidden(forecast_layer, rand() % 2); //over hourly
+        }
+    } else {
     if (currentInt < sunrise || current_time > sunset) {
         night_time = true;
         day_time = false;
@@ -193,7 +209,7 @@ static void handle_tick(struct tm *tick_time, TimeUnits units_changed) {
             APP_LOG(APP_LOG_LEVEL_DEBUG, "night_time = %i, day_time = %i", night_time, day_time);
         }
     }
-
+    }
 
     // Animate "loading" icon dots until the first successful weather request
     static int animation_step = 0;
@@ -256,13 +272,14 @@ static void handle_tick(struct tm *tick_time, TimeUnits units_changed) {
                 //APP_LOG(APP_LOG_LEVEL_DEBUG, "update - stale_time = %i, stale_time - update = %i, stale = %i", updated - stale_time, stale_time - updated, stale);
                 //APP_LOG(APP_LOG_LEVEL_DEBUG, "delay %i > curr_tm - %i %i, stale should false, diff %i", delay, updated, stale_time, stale_time - updated);
             }
-        
             if (debug_flag > 3) {
+                if (currentInt % 3 == 0) {
                 weather_layer_set_temperature(conditions_layer,     (rand() % 180) - 50, rand() % 2, big);
                 weather_layer_set_temperature(hourly_left_layer,    (rand() % 180) - 50, rand() % 2, small);
                 weather_layer_set_temperature(hourly_right_layer,   (rand() % 180) - 50, rand() % 2, small);
                 weather_layer_set_temperature(forecast_left_layer,  (rand() % 180) - 50, rand() % 2, small);
                 weather_layer_set_temperature(forecast_right_layer, (rand() % 180) - 50, rand() % 2, small);
+                }
             } else {
                 weather_layer_set_temperature(conditions_layer, weather_data->day1_temp, stale, big);
                 weather_layer_set_temperature(forecast_left_layer, weather_data->day4_temp, stale, small);
@@ -278,9 +295,6 @@ static void handle_tick(struct tm *tick_time, TimeUnits units_changed) {
                 }
 
             }
-
-
-        //}
         
         layer_set_hidden(inverter_layer_get_layer(hourly_inverter_layer), day_time);
         if (debug_flag > 0) {
@@ -288,13 +302,15 @@ static void handle_tick(struct tm *tick_time, TimeUnits units_changed) {
         }
         
         if (debug_flag > 3) {
-            weather_layer_set_icon(conditions_layer, rand() % 23);
-            weather_layer_set_icon(hourly_left_layer, rand() % 23);
-            weather_layer_set_icon(hourly_right_layer, rand() % 23);
-            weather_layer_set_icon(forecast_left_layer, rand() % 23);
-            weather_layer_set_icon(forecast_right_layer, rand() % 23);
-        } else {
+            if (currentInt % 3 == 0) {
+            weather_layer_set_icon(conditions_layer, rand() % 17);
+            weather_layer_set_icon(hourly_left_layer, rand() % 17);
+            weather_layer_set_icon(hourly_right_layer, rand() % 17);
+            weather_layer_set_icon(forecast_left_layer, rand() % 17);
+            weather_layer_set_icon(forecast_right_layer, rand() % 17);
+            }
             
+        } else {
             
             if (bluetooth_connection_service_peek() == false) {
                 if (debug_flag > 2) {APP_LOG(APP_LOG_LEVEL_DEBUG, "bluetooth_connection_service_peek = %i", bluetooth_connection_service_peek());}
@@ -311,7 +327,7 @@ static void handle_tick(struct tm *tick_time, TimeUnits units_changed) {
                 weather_layer_set_info(forecast_right_layer, "");
                 
             }
-
+            
             else if (bluetooth_connection_service_peek() == true) {
                 if (debug_flag > 2) {APP_LOG(APP_LOG_LEVEL_DEBUG, "bluetooth_connection_service_peek = %i", bluetooth_connection_service_peek());}
             
@@ -386,7 +402,6 @@ static void handle_tick(struct tm *tick_time, TimeUnits units_changed) {
     //if (weather_data->updated < time(NULL) - delay) {stale = true;}
     
     int debug_return = debug_flag;
-    debug_flag = 0;
     //if (weather_data->updated < stale_time) {
 /*    if (debug_flag > 0) {
         APP_LOG(APP_LOG_LEVEL_DEBUG, "current time = %i, updated = %i, stale_time = %i", current_time, updated, stale_time);

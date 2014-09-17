@@ -6,6 +6,7 @@
 #define KEY_CURRENT_TIME 4
 #define KEY_ERROR 5
 #define KEY_LOCATION 6
+#define KEY_CURRENT_EPOCH 7
 
 #define KEY_DAY1_TEMP 10
 #define KEY_DAY1_COND 11
@@ -53,7 +54,8 @@ typedef struct {
     int sunrise;
     int sunset;
     int current_time;
-    const char *location; 
+    const char *location;
+    int current_epoch; 
     time_t updated;
     WeatherError error;
 } WeatherData;

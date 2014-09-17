@@ -214,7 +214,7 @@ void weather_layer_destroy(WeatherLayer* weather_layer) {
 uint8_t weather_icon_for_condition(int c, bool night_time) {
     // Thunderstorm
 
-	debug_flag = 0; 
+	debug_flag = 1;
     if (c < 1) {
         if (debug_flag > 0) {
             APP_LOG(APP_LOG_LEVEL_DEBUG, "WEATHER_ICON_CLOUD_ERROR");
@@ -293,10 +293,10 @@ uint8_t weather_icon_for_condition(int c, bool night_time) {
 
     else if (c == 804) {
         if (debug_flag > 0) {
-            APP_LOG(APP_LOG_LEVEL_DEBUG, "WEATHER_ICON_CLOUDY");
+            APP_LOG(APP_LOG_LEVEL_DEBUG, "WEATHER_ICON_FOG");
         }
-        return WEATHER_ICON_CLOUDY;
-        //return WEATHER_ICON_FOG;
+        //return WEATHER_ICON_CLOUDY;
+        return WEATHER_ICON_FOG;
     }
     // Extreme
     else if ((c >= 900 && c < 903) || (c > 904 && c < 1000)) {

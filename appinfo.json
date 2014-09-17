@@ -1,6 +1,11 @@
 {
     "appKeys": {
+        "sunrise": 2,
+        "sunset": 3,
         "current_time": 4,
+        "error": 5,
+        "location": 6,
+        "current_epoch": 7,
         "day1_cond": 11,
         "day1_temp": 10,
         "day2_cond": 21,
@@ -15,17 +20,13 @@
         "day5_cond": 51,
         "day5_temp": 50,
         "day5_time": 52,
-        "error": 5,
-        "location": 6,
-        "request_update": 92,
-        "sunrise": 2,
-        "sunset": 3
+        "request_update": 92
     },
     "capabilities": [
         ""
     ],
     "companyName": "Pebble Community",
-    "longName": "Futura Weather",
+    "longName": "FM Futura",
     "projectType": "native",
     "resources": {
         "media": [
@@ -178,10 +179,10 @@
             }
         ]
     },
-    "shortName": "Futura Weather",
-    "uuid": "6EBE49D7-BC89-498E-B147-049F49C099AD",
+    "shortName": "FM Futura",
+    "uuid": "b736ee01-d727-41f9-acb1-6a42693928ea",
     "versionCode": 8,
-    "versionLabel": "2.0.3",
+    "versionLabel": "1.1",
     "watchapp": {
         "watchface": true
     }

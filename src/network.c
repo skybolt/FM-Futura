@@ -7,18 +7,15 @@ int requests_queued = 0;
 int crash_supressor = 0;
 
 static void appmsg_in_received(DictionaryIterator *received, void *context) {
+    if (debug_flag > 0) {APP_LOG(APP_LOG_LEVEL_DEBUG, "static void appmsg_in_received");}
 
-    if (crash_supressor < -1) {
-        crash_supressor = crash_supressor + 1;
-        APP_LOG(APP_LOG_LEVEL_DEBUG, "crash supressor = %i", crash_supressor);
-    } else {
+    //if (crash_supressor < -1) {crash_supressor = crash_supressor + 1; APP_LOG(APP_LOG_LEVEL_DEBUG, "crash supressor = %i", crash_supressor);} else {
     int saver = debug_flag;
-    debug_flag = debug_flag;
-    debug_flag = 0; 
+//    debug_flag = 1;
     requests_queued = 0;
     display_counter = 3;
-    stale = false;
-    if (debug_flag > 0) {
+    //stale = false;
+    if (debug_flag > -1) {
         APP_LOG(APP_LOG_LEVEL_DEBUG, "In received.");
     }
     WeatherData *weather_data = (WeatherData*) context;
@@ -99,7 +96,9 @@ static void appmsg_in_received(DictionaryIterator *received, void *context) {
     if (debug_flag > 0) {
         APP_LOG(APP_LOG_LEVEL_DEBUG, "error_tuple ");
     }
-
+    
+    Tuple *current_epoch_tuple = dict_find(received, KEY_CURRENT_EPOCH);
+    
     if (debug_flag > 0) {
         APP_LOG(APP_LOG_LEVEL_DEBUG, "dictionary iteration complete");
 
@@ -139,16 +138,20 @@ static void appmsg_in_received(DictionaryIterator *received, void *context) {
         weather_data->sunset = sunset_tuple->value->int32;
         weather_data->current_time = current_time_tuple->value->int32;
         weather_data->location = location_tuple->value->cstring;
+        weather_data->current_epoch = current_epoch_tuple->value->int32; 
         weather_data->error = WEATHER_E_OK;
         weather_data->updated = time(NULL);
-
-         if (debug_flag > 0) {
+        
+        //debug_flag = 1;
+         if (debug_flag > -1) {
             APP_LOG(APP_LOG_LEVEL_DEBUG, "before if day 1 temperature %i and condition %i", weather_data->day1_temp, weather_data->day1_cond);
             APP_LOG(APP_LOG_LEVEL_DEBUG, "before if day 2 temperature %i and condition %i, info %s", weather_data->day2_temp, weather_data->day2_cond, weather_data->day2_info);
             APP_LOG(APP_LOG_LEVEL_DEBUG, "before if day 3 temperature %i and condition %i, info %s", weather_data->day3_temp, weather_data->day3_cond, weather_data->day3_info);
             APP_LOG(APP_LOG_LEVEL_DEBUG, "before if day 4 temperature %i and condition %i and time %i", weather_data->day4_temp, weather_data->day4_cond, weather_data->day4_time);
             APP_LOG(APP_LOG_LEVEL_DEBUG, "before if day 5 temperature %i and condition %i and time %i", weather_data->day5_temp, weather_data->day5_cond, weather_data->day5_time);
-            APP_LOG(APP_LOG_LEVEL_DEBUG, "before if astro location %s", weather_data->location);
+            APP_LOG(APP_LOG_LEVEL_DEBUG, "current_time %i", weather_data->current_time);
+            APP_LOG(APP_LOG_LEVEL_DEBUG, "current_epoch %i", weather_data->current_epoch); 
+            APP_LOG(APP_LOG_LEVEL_DEBUG, "location %s", weather_data->location);
         } 
     }
     else if (error_tuple) {
@@ -160,7 +163,7 @@ static void appmsg_in_received(DictionaryIterator *received, void *context) {
         APP_LOG(APP_LOG_LEVEL_DEBUG, "Got message with unknown keys... day1_temp%p day1_cond%p day2_temp%p day2_cond%p day3_temp%p day3_cond%p location_tuple%p error%p",
                 day1_temp_tuple, day1_cond_tuple, day2_temp_tuple, day2_cond_tuple, day3_temp_tuple, day3_cond_tuple, location_tuple, error_tuple);
     }    debug_flag = saver;
-    }
+    //}  //end of crash saver else
 }
 
 static void appmsg_in_dropped(AppMessageResult reason, void *context) {
@@ -238,7 +241,7 @@ void init_network(WeatherData *weather_data)
     app_message_set_context(weather_data);
     //  app_message_open(124, 256);
 
-    app_message_open(1024, 2048);
+    app_message_open(2048, 256);
 
     weather_data->error = WEATHER_E_OK;
     weather_data->updated = 0;
@@ -261,6 +264,6 @@ void request_weather()
         APP_LOG(APP_LOG_LEVEL_DEBUG, "requests_queued = %i", requests_queued);
     }
     else {
-    if (debug_flag > -1) {APP_LOG(APP_LOG_LEVEL_DEBUG, "requests_queued = %i, too high, stop making requests", requests_queued); }
+    if (debug_flag > 0) {APP_LOG(APP_LOG_LEVEL_DEBUG, "requests_queued = %i, too high, stop making requests", requests_queued); }
     } 
 }
