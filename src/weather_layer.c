@@ -1,7 +1,7 @@
 //working set version
 #include <pebble.h>
 #include "weather_layer.h"
-#include "main.h"
+#include "futura.h"
 
 static uint8_t WEATHER_ICONS[] = {
     RESOURCE_ID_ICON_CLEAR_DAY,
@@ -12,6 +12,7 @@ static uint8_t WEATHER_ICONS[] = {
     RESOURCE_ID_ICON_WIND,
     RESOURCE_ID_ICON_FOG,
     RESOURCE_ID_ICON_CLOUDY,
+    RESOURCE_ID_ICON_MOSTLY_CLOUDY,
     RESOURCE_ID_ICON_PARTLY_CLOUDY_DAY,
     RESOURCE_ID_ICON_PARTLY_CLOUDY_NIGHT,
     RESOURCE_ID_ICON_THUNDER,
@@ -214,7 +215,7 @@ void weather_layer_destroy(WeatherLayer* weather_layer) {
 uint8_t weather_icon_for_condition(int c, bool night_time) {
     // Thunderstorm
 
-	debug_flag = 1;
+	debug_flag = 0;
     if (c < 1) {
         if (debug_flag > 0) {
             APP_LOG(APP_LOG_LEVEL_DEBUG, "WEATHER_ICON_CLOUD_ERROR");
@@ -290,13 +291,22 @@ uint8_t weather_icon_for_condition(int c, bool night_time) {
             return WEATHER_ICON_PARTLY_CLOUDY_DAY;
         }
     }
-
     else if (c == 804) {
         if (debug_flag > 0) {
-            APP_LOG(APP_LOG_LEVEL_DEBUG, "WEATHER_ICON_FOG");
+//            APP_LOG(APP_LOG_LEVEL_DEBUG, "WEATHER_ICON_CLOUDY");
         }
         //return WEATHER_ICON_CLOUDY;
-        return WEATHER_ICON_FOG;
+        int rander = rand() % 2;
+        if (rander != rander) {
+            if (debug_flag > 0) {APP_LOG(APP_LOG_LEVEL_DEBUG, "RAND %i = 0, WEATHER_ICON_CLOUDY", rander);}
+            return WEATHER_ICON_CLOUDY;
+        } else if (rander == rander) {
+            if (debug_flag > 0) {APP_LOG(APP_LOG_LEVEL_DEBUG, "RAND %i = 1, WEATHER_ICON_MOSTLY_CLOUDY", rander);}
+            return WEATHER_ICON_MOSTLY_CLOUDY;
+        } else {
+            APP_LOG(APP_LOG_LEVEL_DEBUG, "RAND %i neither = 0 or = 1; WEATHER_ICON_CLOUD_ERROR", rander);
+            return WEATHER_ICON_CLOUD_ERROR;
+        }
     }
     // Extreme
     else if ((c >= 900 && c < 903) || (c > 904 && c < 1000)) {
@@ -327,3 +337,7 @@ uint8_t weather_icon_for_condition(int c, bool night_time) {
         return WEATHER_ICON_NOT_AVAILABLE;
     }
 }
+
+
+
+

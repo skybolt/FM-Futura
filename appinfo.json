@@ -66,12 +66,17 @@
                 "name": "ICON_PARTLY_CLOUDY_DAY",
                 "type": "png"
             },
-            {
-                "file": "images/cloudy.png",
-                "name": "ICON_CLOUDY",
-                "type": "png"
-            },
-            {
+                  {
+                  "file": "images/cloudy.png",
+                  "name": "ICON_CLOUDY",
+                  "type": "png"
+                  },
+                  {
+                  "file": "images/mostly-cloudy.png",
+                  "name": "ICON_MOSTLY_CLOUDY",
+                  "type": "png"
+                  },
+                  {
                 "file": "images/fog.png",
                 "name": "ICON_FOG",
                 "type": "png"
@@ -180,9 +185,9 @@
         ]
     },
     "shortName": "FM Futura",
-    "uuid": "b736ee01-d727-41f9-acb1-6a42693928ea",
+    "uuid": "413632cc-c3f6-4d54-b840-d412ebba2f61",
     "versionCode": 8,
-    "versionLabel": "1.1",
+    "versionLabel": "1.2",
     "watchapp": {
         "watchface": true
     }

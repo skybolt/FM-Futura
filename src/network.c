@@ -1,8 +1,8 @@
 //working set version
 #include <pebble.h>
 #include "network.h"
-#include "bluetooth.h"
-#include "main.h"
+//#include "bluetooth.h"
+#include "futura.h"
 int requests_queued = 0;
 int crash_supressor = 0;
 
@@ -15,7 +15,7 @@ static void appmsg_in_received(DictionaryIterator *received, void *context) {
     requests_queued = 0;
     display_counter = 3;
     //stale = false;
-    if (debug_flag > -1) {
+    if (debug_flag > 0) {
         APP_LOG(APP_LOG_LEVEL_DEBUG, "In received.");
     }
     WeatherData *weather_data = (WeatherData*) context;
@@ -143,16 +143,18 @@ static void appmsg_in_received(DictionaryIterator *received, void *context) {
         weather_data->updated = time(NULL);
         
         //debug_flag = 1;
-         if (debug_flag > -1) {
+         if (debug_flag > -0) {
+             //(day1_temp_tuple && day1_cond_tuple && day2_temp_tuple && day3_cond_tuple && day2_info_tuple && day3_temp_tuple && day3_cond_tuple && day3_info_tuple && day4_temp_tuple && day4_cond_tuple && day4_time_tuple && day5_temp_tuple && day5_cond_tuple && day5_time_tuple && sunrise_tuple && sunset_tuple && current_time_tuple && location_tuple)
             APP_LOG(APP_LOG_LEVEL_DEBUG, "before if day 1 temperature %i and condition %i", weather_data->day1_temp, weather_data->day1_cond);
             APP_LOG(APP_LOG_LEVEL_DEBUG, "before if day 2 temperature %i and condition %i, info %s", weather_data->day2_temp, weather_data->day2_cond, weather_data->day2_info);
             APP_LOG(APP_LOG_LEVEL_DEBUG, "before if day 3 temperature %i and condition %i, info %s", weather_data->day3_temp, weather_data->day3_cond, weather_data->day3_info);
             APP_LOG(APP_LOG_LEVEL_DEBUG, "before if day 4 temperature %i and condition %i and time %i", weather_data->day4_temp, weather_data->day4_cond, weather_data->day4_time);
             APP_LOG(APP_LOG_LEVEL_DEBUG, "before if day 5 temperature %i and condition %i and time %i", weather_data->day5_temp, weather_data->day5_cond, weather_data->day5_time);
-            APP_LOG(APP_LOG_LEVEL_DEBUG, "current_time %i", weather_data->current_time);
+            APP_LOG(APP_LOG_LEVEL_DEBUG, "sunrise %i, current_time %i, sunset %i", weather_data->sunrise, weather_data->current_time, weather_data->sunset);
             APP_LOG(APP_LOG_LEVEL_DEBUG, "current_epoch %i", weather_data->current_epoch); 
             APP_LOG(APP_LOG_LEVEL_DEBUG, "location %s", weather_data->location);
-        } 
+         }
+        
     }
     else if (error_tuple) {
         weather_data->error = WEATHER_E_NETWORK;
@@ -171,7 +173,7 @@ static void appmsg_in_dropped(AppMessageResult reason, void *context) {
     // Request a new update...
     request_weather();
     APP_LOG(APP_LOG_LEVEL_DEBUG, "App Message Sync Error: %d", reason);
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "Got error: %s", translate_error(reason));
+//    APP_LOG(APP_LOG_LEVEL_DEBUG, "Got error: %s", translate_error(reason));
 }
 
 static void appmsg_out_sent(DictionaryIterator *sent, void *context) {

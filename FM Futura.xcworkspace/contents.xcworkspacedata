@@ -104,10 +104,10 @@
          location = "group:config.h">
       </FileRef>
       <FileRef
-         location = "group:main.h">
+         location = "group:futura.h">
       </FileRef>
       <FileRef
-         location = "group:main.c">
+         location = "group:futura.c">
       </FileRef>
       <FileRef
          location = "group:network.h">

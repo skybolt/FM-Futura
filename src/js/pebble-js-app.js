@@ -1,25 +1,30 @@
-//working set version
 //FM FUTURA
 
-//var day1_temp, day1_conTIONd, day2_temp, day2_cond, day3_temp, day3_cond, day4_temp, day4_cond, day4_info, day5_temp, day5_cond, day5_info, sunrise, sunset, current_time, current_hour, current_minute, current_epoch, pretty_hour, weather_timestamp, location, wu_location, ow_location;
 var debug_flag = 0;
-var provider_flag = 0;
+localStorage.setItem("provider_flag", 1);
+
 var updateInProgress = false;
 
-if (provider_flag == 0) {
+
+if (localStorage.getItem("provider_flag") == 0) {
     console.log("provider: openweather.org");
 }
-if (provider_flag == 1) {
+if (localStorage.getItem("provider_flag") == 1) {
     console.log("provider: weatherunderground.com");
 }
+
 Pebble.addEventListener("ready", function(e) {
-    console.log("ready, starting ...");
+    if (debug_flag > 0) {
+        console.log("ready, starting ...");
+    }
     checkRequestTime();
     //updateWeather();
 });
 
 Pebble.addEventListener("appmessage", function(e) {
-    console.log("AppMessage recieved");
+    if (debug_flag > 0) {
+        console.log("AppMessage recieved");
+    }
     checkRequestTime();
     //updateWeather();
 });
@@ -61,23 +66,12 @@ function epochToTime(epoch) {
     return time;
 }
 
-function billing() {
-    if (debug_flag > 0) {
-        console.log("paying bills ...");
-    }
-    var req = new XMLHttpRequest();
-    req.open("GET", "http://www.wunderground.com/?apiref=c6aca805bd4ad9c2", true); //  Current Conditions
-    req.open("GET", "http://www.wunderground.com/?apiref=e7df32ff6bb6fb0d", true); //  Hourly Forecast, today's forecast
-    req.open("GET", "http://www.wunderground.com/?apiref=060d48ec505bb753", true); //  Daily Forecast
-    req.open("GET", "http://www.wunderground.com/?apiref=0f727a310f1287b2", true); //  Astronomy
-}
-
 function checkRequestTime() { //check to see if its too soon to request an update. Weather Underground in particular gets quite cross about this
     var oldFlag = debug_flag;
     var ownName = arguments.callee.toString();
     ownName = ownName.substr('function '.length);        // trim off "function "
     ownName = ownName.substr(0, ownName.indexOf('('));        // trim off everything after the function name
-    var debug_flag = 0;
+
     if (debug_flag > 0) {
         console.log("FUNCTION NAME = " + ownName + " debug_flag " + debug_flag);
         console.log("Should I start a request?");
@@ -85,26 +79,31 @@ function checkRequestTime() { //check to see if its too soon to request an updat
     var lastUpdate;
     var now = new Date().getTime();
     now = Math.round(now / 1e3);
-    if (debug_flag > 4) {
+    if (debug_flag > 10) {
         console.log("now time " + now);
     }
     var delay = 590;
-    delay = 60;
-    if (debug_flag > 4) {
+
+    if (localStorage.getItem("provider_flag") == 0) {
+        delay = 60;
+        console.log("overriding delay flag, set to " + delay);
+    }
+
+    if (debug_flag > 0) {
         console.log("lastUpdate: " + localStorage.getItem("lastUpdate"));
     }
     if (!(localStorage.getItem("lastUpdate"))) {
-        if (debug_flag > 4) {
+        if (debug_flag > 0) {
             console.log("local storage of lastUpdate not found");
         }
-        if (debug_flag > 4) {
+        if (debug_flag > 0) {
             console.log("setting lastupdate to " + lastUpdate + ", " + (now - lastUpdate + " seconds ago"));
         }
         lastUpdate = now - (delay + 1);
         localStorage.setItem("lastUpdate", lastUpdate);
     } else {
         lastUpdate = parseInt(localStorage.getItem("lastUpdate"));
-        if (debug_flag > 4) {
+        if (debug_flag > 0) {
             console.log("localStorage.lastUpdate found: " + lastUpdate);
         }
     }
@@ -137,7 +136,7 @@ function checkRequestTime() { //check to see if its too soon to request an updat
     if (stale < 0) {
         console.log("yes, start new request, stale < 0");
 //all three lines above should be same same
-        if (debug_flag > -1) {
+        if (debug_flag > 0) {
             console.log("overdue, stale " + (now - (lastUpdate + delay))    + " seconds!!");
             console.log("overdue, stale " + (now - (nextUpdate))            + " seconds!!");
             //if above lines == same, delete top one
@@ -145,6 +144,7 @@ function checkRequestTime() { //check to see if its too soon to request an updat
         now = parseInt(Math.round(now));
         localStorage.setItem("lastUpdate", parseInt(now));
         updateInProgress = false;
+        console.log("calling updateWeather");
         updateWeather();
 
 //    }  else if (nextUpdate > (now)) {
@@ -165,11 +165,9 @@ function checkRequestTime() { //check to see if its too soon to request an updat
         if (debug_flag > 0) {
             console.log("NO, do NOT start new request, stale > 0, not stale");
             console.log("instead, just re-send FM FUTURA DATA");
-
-            //console.log("stale not larger than now + 10");
-            //console.log("debug_flag = " + debug_flag);
+            console.log("stale not larger than now + 10");
+            console.log("debug_flag = " + debug_flag);
             console.log("is " + (delay - stale) + " > " + delay + "? No.");
-            //localStorage.setItem("wu_location","farts");
             console.log("checking storage of wu_location " + localStorage.getItem("wu_location"));
             console.log("getting OW location, re-sending locally stored weather info");
         }
@@ -190,7 +188,7 @@ function checkRequestTime() { //check to see if its too soon to request an updat
 
 
 function updateLocation() {
-    //var debug_flag = 0;
+
     if (debug_flag > 0) {
         console.log("(updateLocation) checking to see if updateInProgress");
         console.log("updateInProgress = " + updateInProgress);
@@ -214,7 +212,7 @@ function updateLocation() {
 }
 
 function updateWeather() {
-    //var debug_flag = 0;
+
     if (debug_flag > 0) {
         console.log("(updateWeather) checking to see if updateInProgress");
         console.log("updateInProgress = " + updateInProgress);
@@ -251,19 +249,26 @@ function getLocation_locationSuccess(pos) {
 function locationSuccess(pos) {
     var coordinates = pos.coords;
     if (debug_flag > 0) {
-        console.log("Location Success!!\nGot coordinates:\n" + JSON.stringify(coordinates));
+        console.log("\nLocation Success!!\nGot coordinates:\n" + JSON.stringify(coordinates));
     }
-    if (provider_flag == 0) {
+
+    if (localStorage.getItem("provider_flag") == 0) {
         fetchOpenweatherConditions(coordinates.latitude, coordinates.longitude);
+        console.log("provider_flag = " + localStorage.getItem("provider_flag"));
         console.log("configured for openweathermap.org")
-        localStorage.setItem("wu_location", "");
-    } else if (provider_flag == 1) {
+        localStorage.setItem("wu_location", " ");
+        console.log("setting wu_location to [space]");
+
+    } else if (localStorage.getItem("provider_flag") == 1) {
+
         fetchWeatherundergroundConditions(coordinates.latitude, coordinates.longitude);
         //fetchWeatherundergroundConditions(-27.000001, 152.000001); // for testing
-        console.log("configured for wunderground.com")
-        //localStorage.setItem("ow_location", "");
-        billing();
-
+        if (debug_flag > 0) {
+            console.log("provider_flag = " + localStorage.getItem("provider_flag"));
+            console.log("configured for wunderground.com");
+            console.log("do we have a wu_location? Checkings storage: " + localStorage.getItem("wu_location"));
+            //localStorage.setItem("ow_location", "");
+        }
     }
 }
 
@@ -276,24 +281,24 @@ function locationError(err) {
 var temperature, icon, city, sunrise, sunset, condition, current_time, country;
 
 function fetchOpenweatherConditions(latitude, longitude) {
-    //var debug_flag = 1;
+
     var ownName = arguments.callee.toString();
     ownName = ownName.substr('function '.length);        // trim off "function "
     ownName = ownName.substr(0, ownName.indexOf('('));        // trim off everything after the function name
-    if (debug_flag > -1) {
+    if (debug_flag > 0) {
         console.log("FUNCTION NAME = " + ownName);
     }
     var response;
     var req = new XMLHttpRequest();
     req.open('GET', "http://api.openweathermap.org/data/2.5/weather?" +
              "lat=" + latitude + "&lon=" + longitude + "&cnt=1", true);
-    if (debug_flag > -1) {
+    if (debug_flag > 0) {
         console.log("http://api.openweathermap.org/data/2.5/weather?" + "lat=" + latitude + "&lon=" + longitude + "&cnt=2");
     }
 
     req.onload = function(e) {
         if (req.readyState == 4) {
-            if (debug_flag > -1) {
+            if (debug_flag > 0) {
                 console.log("passed READYSTATE 4 " + ownName);
             }
             if(req.status == 200) {
@@ -388,11 +393,10 @@ function fetchOpenweatherConditions(latitude, longitude) {
 }
 
 function fetchOpenweatherHourlyForecast(latitude, longitude) {
-    //var debug_flag = 0;
+
     var ownName = arguments.callee.toString();
     ownName = ownName.substr('function '.length);        // trim off "function "
     ownName = ownName.substr(0, ownName.indexOf('('));        // trim off everything after the function name
-    console.log("FUNCTION NAME = " + ownName);
     if (debug_flag > 0) {
         console.log("FUNCTION NAME = " + ownName);
     }
@@ -420,10 +424,7 @@ function fetchOpenweatherHourlyForecast(latitude, longitude) {
                         if (debug_flag > 0) {
                             console.log("country US = " + country);
                         }
-                        //if (response.sys.country === "US") {
-                        // Convert temperature to Fahrenheit if user is within the US
                         temperature = Math.round(((tempResult - 273.15) * 1.8) + 32);
-                        //day2_temp = temperature;
                     }
                     else {
                         // Otherwise, convert temperature to Celsius
@@ -431,16 +432,13 @@ function fetchOpenweatherHourlyForecast(latitude, longitude) {
                             console.log("country US = " + country);
                         }
                         temperature = Math.round(tempResult - 273.15);
-                        //day2_temp = temperature;
                     }
                     timestamp = response.list[n].dt;
                     condition = response.list[n].weather[0].id;
                     day2_cond = condition;
                     day2_info = timestamp;
-                    //console.log("day2_info = " + day2_info);
                     day2_info = epochToTime(day2_info);
                     day2_info = pretty_hour;
-                    //console.log("day2_info = " + day2_info);
 
                     /*Pebble.sendAppMessage({
                      "day2_cond": day2_cond,
@@ -449,7 +447,6 @@ function fetchOpenweatherHourlyForecast(latitude, longitude) {
 
                     n = 5;
                     tempResult = response.list[n].main.temp;
-                    //country = response.city.country;
                     if (debug_flag > 0) {
                         console.log("day 3 country: " + country);
                     }
@@ -457,16 +454,12 @@ function fetchOpenweatherHourlyForecast(latitude, longitude) {
                         if (debug_flag > 0) {
                             console.log("country US = " + country);
                         }
-                        //if (response.sys.country === "US") {
-                        // Convert temperature to Fahrenheit if user is within the US
                         temperature = Math.round(((tempResult - 273.15) * 1.8) + 32);
-                        //day3_temp = temperature;
                     }
                     else {
                         // Otherwise, convert temperature to Celsius
                         console.log("country US != " + country);
                         temperature = Math.round(tempResult - 273.15);
-                        //day3_temp = temperature;
                     }
                     condition = response.list[n].weather[0].id;
                     timestamp = response.list[n].dt;
@@ -498,7 +491,7 @@ function fetchOpenweatherDailyForecast(latitude, longitude) {       // sends day
     var ownName = arguments.callee.toString();
     ownName = ownName.substr('function '.length);        // trim off "function "
     ownName = ownName.substr(0, ownName.indexOf('('));        // trim off everything after the function name
-    if (debug_flag > -1) {
+    if (debug_flag > 0) {
         console.log("FUNCTION NAME = " + ownName);
     }
 
@@ -525,7 +518,7 @@ function fetchOpenweatherDailyForecast(latitude, longitude) {       // sends day
                         // Otherwise, convert temperature to Celsius
                         temperature = Math.round(tempResult - 273.15);
                     }
-                    //day2_temp = temperature;
+
 
                     tempResult = response.list[0].temp.min;
                     if (response.city.country === "US") {
@@ -665,7 +658,9 @@ function fetchWeatherundergroundConditions(latitude, longitude) { // gets day 1
                         localStorage.setItem("day1_temp" = day1_temp);
                     }
 
-                    console.log("calling                     fetchWeatherundergroundHourlyForecast(latitude, longitude)");
+                    if (debug_flag > 0) {
+                        console.log("calling fetchWeatherundergroundHourlyForecast(latitude, longitude)");
+                    }
                     fetchWeatherundergroundHourlyForecast(latitude, longitude);
                     /*      } else {
                               console.log("response.response.error.type " + response.response.error.type + " in function " + ownName);
@@ -759,18 +754,6 @@ function fetchWeatherundergroundHourlyForecast(latitude, longitude) { // gets da
                 }
                 epochToTime(timestamp);
                 day3_info = pretty_hour;
-
-                if (debug_flag > 10) {
-                    console.log("\n call inside of " + ownName +
-                                "\nday1 temp " + day1_temp + " day1 cond " + day1_cond +
-                                "\nday2 temp " + day2_temp + " day2 cond " + day2_cond + " day2_info " + day2_info +
-                                "\nday3 temp " + day3_temp + " day3 cond " + day3_cond + " day3_info " + day3_info +
-                                "\nday4 temp " + day4_temp + " day4 cond " + day4_cond + " day4_ifno " + day4_info +
-                                "\nday5 temp " + day5_temp + " day5 temp " + day5_cond + " day5_info " + day5_info +
-                                "\nSunrise: " + sunrise +
-                                "\nSunset: " + sunset +
-                                "\ncurrent_time: " + current_time);
-                }
 
                 fetchWeatherundergroundDailyForecast(latitude, longitude);
                 /*   } else {
@@ -894,17 +877,6 @@ function fetchWeatherundergroundDailyForecast(latitude, longitude) { // gets day
                     day5_temp = temperature;
                     localStorage.setItem("day5_temp", day5_temp);
 
-                    if (debug_flag > 10) {
-                        console.log("\n call inside of " + ownName +
-                                    "\nday1 temp " + day1_temp + " day1 cond " + day1_cond +
-                                    "\nday2 temp " + day2_temp + " day2 cond " + day2_cond + " day2_info " + day2_info +
-                                    "\nday3 temp " + day3_temp + " day3 cond " + day3_cond + " day3_info " + day3_info +
-                                    "\nday4 temp " + day4_temp + " day4 cond " + day4_cond + " day4_ifno " + day4_info +
-                                    "\nday5 temp " + day5_temp + " day5 temp " + day5_cond + " day5_info " + day5_info +
-                                    "\nSunrise: " + sunrise +
-                                    "\nSunset: " + sunset +
-                                    "\ncurrent_time: " + current_time);
-                    }
 
                     fetchWeatherundergroundAstronomy(latitude, longitude);
                     /*  } else {
@@ -927,13 +899,14 @@ function fetchWeatherundergroundDailyForecast(latitude, longitude) { // gets day
 }
 
 function fetchWeatherundergroundAstronomy(latitude, longitude) {
-    //var debug_flag = 1;
+    var debug_Flag = 1;
     //based on http://api.wunderground.com/api/6fe6c99a5d7df975/astronomy/q/Australia/Sydney.json
     var ownName = arguments.callee.toString();
     ownName = ownName.substr('function '.length);        // trim off "function "
     ownName = ownName.substr(0, ownName.indexOf('('));        // trim off everything after the function name
     if (debug_flag > 0) {
         console.log("FUNCTION NAME = " + ownName);
+        console.log(" calling http://api.wunderground.com/api/" + key + "/astronomy/geolookup/q/" + latitude + "," + longitude + ".json?apiref=0f727a310f1287b2");
     }
     var key = "7d74aa6fc6691d6c"; //almanac info key for WU
     var response;
@@ -961,12 +934,10 @@ function fetchWeatherundergroundAstronomy(latitude, longitude) {
                     var offset_seconds = new Date().getTimezoneOffset() * 60;
                     current_epoch = Math.round(((Date.now()  / 1000)));
 
-                    if (debug_flag > -1) {
+                    if (debug_flag > 0) {
                         console.log(current_epoch + " = current_epoch");
                     }
-                    if (debug_flag > 0) {
-                        console.log(weather_timestamp + " = weather_timestamp");
-                    }
+                    var debug_Flag = 1;
 
                     weather_timestamp = current_epoch;
                     localStorage.setItem("current_epoch", parseInt(current_epoch));
@@ -1025,7 +996,7 @@ function fetchWeatherundergroundAstronomy(latitude, longitude) {
                     }  */
 
 
-                    //var location;
+                    var location;
                     location = response.location.city;
                     localStorage.setItem("wu_location", "/" + response.location.city);
                     console.log("setting wu_location  = /" + response.location.city);
@@ -1036,19 +1007,6 @@ function fetchWeatherundergroundAstronomy(latitude, longitude) {
                     localStorage.setItem("sunset", sunset);
 
                     localStorage.setItem("wu_weather_timestamp", weather_timestamp);
-
-                    if (debug_flag > 10) {
-                        console.log("\nFUNCTION NAME = " + ownName +
-                                    "\nday1 temp " + day1_temp + " day1 cond " + day1_cond +
-                                    "\nday2 temp " + day2_temp + " day2 cond " + day2_cond + " day2_info " + day2_info +
-                                    "\nday3 temp " + day3_temp + " day3 cond " + day3_cond + " day3_info " + day3_info +
-                                    "\nday4 temp " + day4_temp + " day4 cond " + day4_cond + " day4_ifno " + day4_info +
-                                    "\nday5 temp " + day5_temp + " day5 temp " + day5_cond + " day5_info " + day5_info +
-                                    "\nSunrise: " + sunrise +
-                                    "\nSunset: " + sunset +
-                                    "\ncurrent_time: " + current_time + " weather_timestamp: " + weather_timestamp +
-                                    "\nlocation " + location);
-                    }
 
                     fetchOpenweatherLocation(latitude, longitude);
 
@@ -1079,20 +1037,22 @@ function fetchOpenweatherLocation(latitude, longitude) {       // sends days 3, 
     var ownName = arguments.callee.toString();
     ownName = ownName.substr('function '.length);        // trim off "function "
     ownName = ownName.substr(0, ownName.indexOf('('));        // trim off everything after the function name
-    //var debug_flag = 0;
-    if (debug_flag > -1) {
+
+    if (debug_flag > 0) {
         console.log("FUNCTION NAME = " + ownName);
     }
 
 
     var req = new XMLHttpRequest();
     req.open("GET", "http://api.openweathermap.org/data/2.5/forecast/daily?lat=" + latitude + "&lon=" + longitude + "&cnt=10&APPID=9f001a597927140d919cc512193dadd2", true);
-    console.log("http://api.openweathermap.org/data/2.5/forecast/daily?lat=" + latitude + "&lon=" + longitude + "&cnt=10&APPID=9f001a597927140d919cc512193dadd2");
+    if (debug_flag > 0) {
+        console.log("http://api.openweathermap.org/data/2.5/forecast/daily?lat=" + latitude + "&lon=" + longitude + "&cnt=10&APPID=9f001a597927140d919cc512193dadd2");
+    }
     req.onload = function(e) {
         if (req.readyState == 4) {
             if (req.status == 200) {
                 var response = JSON.parse(req.responseText);
-                if (debug_flag > -1) {
+                if (debug_flag > 0) {
                     console.log(ownName + ", " + req.responseText.length);
                 }
                 if (req.responseText.length > 100) {
@@ -1103,7 +1063,9 @@ function fetchOpenweatherLocation(latitude, longitude) {       // sends days 3, 
 
                     localStorage.setItem("ow_location", response.city.name);
 
-                    console.log("setting ow_location  = " + response.city.name);
+                    if (debug_flag > 0) {
+                        console.log("setting ow_location  = " + response.city.name);
+                    }
 
                     sendFMFutura();
                     //fetchWeatherundergroundAstronomy(latitude, longitude);
@@ -1123,7 +1085,6 @@ function fetchOpenweatherLocation(latitude, longitude) {       // sends days 3, 
 
 function sendFMFutura() {
 
-
     var now = new Date().getTime();
     var offset = new Date().getTimezoneOffset() * 60;
     now = parseInt(Math.round(now / 1e3));
@@ -1141,6 +1102,7 @@ function sendFMFutura() {
             console.log("(lastSend + 10) - now = " + ((lastSend + 10) - now));
             console.log("doing, becuase lastsend + 10 > now");
         }
+
         //var debug_flag = 1;
         if (debug_flag > 0) {
             console.log("SEND FM FUTURA FUNCTION");
@@ -1161,12 +1123,11 @@ function sendFMFutura() {
             console.log("localStorage.getItem day5_info = " + localStorage.getItem("day5_info"));
             console.log("localStorage.getItem sunrise = "   + parseInt(localStorage.getItem("sunrise")));
             console.log("localStorage.getItem sunset = "    + parseInt(localStorage.getItem("sunset")));
-            console.log("localStorage.getItem location = "  + localStorage.getItem("ow_location") + "/" + localStorage.getItem("wu_location"));
+            console.log("localStorage.getItem location = "  + localStorage.getItem("ow_location") + localStorage.getItem("wu_location"));
             console.log("localStorage.getItem WU location = " + localStorage.getItem("wu_location"));
             console.log("localStorage.getItem OW location = " + localStorage.getItem("ow_location"));
             console.log("localStorage.getItem current_epoch = " + parseInt(localStorage.getItem("current_epoch")));
         }
-
 
         //read all from storage
         var day1_temp = parseInt(localStorage.getItem("day1_temp"));
@@ -1196,9 +1157,15 @@ function sendFMFutura() {
         ownName = ownName.substr(0, ownName.indexOf('('));        // trim off everything after the function name
 
 
-
-
-
+        if (debug_flag > 0) {
+            console.log("\n\n****** FM Futura JS Stored Values send block *******"
+                        + "\nDay1: " + parseInt(localStorage.getItem("day1_cond")) + " " + localStorage.getItem("day1_temp") + " " + localStorage.getItem("day1_info")
+                        + "\nDay2: " + parseInt(localStorage.getItem("day2_cond")) + " " + localStorage.getItem("day2_temp") + " " + localStorage.getItem("day2_info")
+                        + "\nDay3: " + parseInt(localStorage.getItem("day3_cond")) + " " + localStorage.getItem("day3_temp") + " " + localStorage.getItem("day3_info")
+                        + "\nDay4: " + parseInt(localStorage.getItem("day4_cond")) + " " + localStorage.getItem("day4_temp") + " " + localStorage.getItem("day4_info")
+                        + "\nDay5: " + parseInt(localStorage.getItem("day5_cond")) + " " + localStorage.getItem("day5_temp") + " " + localStorage.getItem("day5_info")
+                        + "\n****** END JS Stored Values *******\n\n")
+        }
 
         Pebble.sendAppMessage({
 "day1_temp": day1_temp,
@@ -1254,6 +1221,13 @@ function sendFMFutura() {
 
 
 function iconFromWeatherId(weatherId) {
+    var ownName = arguments.callee.toString();
+    ownName = ownName.substr('function '.length);        // trim off "function "
+    ownName = ownName.substr(0, ownName.indexOf('('));        // trim off everything after the function name
+    if (debug_flag > 0) {
+        console.log("FUNCTION NAME = " + ownName);
+    }
+
     console.log("weatherID passed in, " + weatherId);
     if (weatherId < 200) {		    // 0-199 undefined, return lines?
         console.log("0-199 undefined, return lines, return 10 (fog lines)");
@@ -1288,6 +1262,12 @@ function iconFromWeatherId(weatherId) {
 
 
 function iconFromWeatherString(weatherId) {
+    var ownName = arguments.callee.toString();
+    ownName = ownName.substr('function '.length);        // trim off "function "
+    ownName = ownName.substr(0, ownName.indexOf('('));        // trim off everything after the function name
+    if (debug_flag > 0) {
+        console.log("FUNCTION NAME = " + ownName);
+    }
     if (weatherId == "tstorms") {
         console.log("weatherId = " + weatherId + ", return 6, 211 (200 series - thunderstorms)"); // 200 series - thunderstorms, // 300 to 321 defined as rain, 400-499 not defined, 500-599 is rain
         return 211;
@@ -1319,8 +1299,8 @@ function iconFromWeatherString(weatherId) {
         console.log("weatherId = " + weatherId + ", return 8, 600 (600-699 defined as snow, return 8 (snow)");
         return 600;
     } else if (weatherId == "mostlycloudy" ) {		// 700-799 is mist, smoke, fog, etc. Return lines
-        console.log("weatherId = " + weatherId + ", return 4, 804 (overcast clouds)");
-        return 804;						// 900-99 is crazy atmospheric shit,
+        console.log("weatherId = " + weatherId + ", return 4, 711 (fog, for overcast clouds)");
+        return 711;						// 900-99 is crazy atmospheric shit,
     } else if (weatherId == "cloudy" ) {		// 700-799 is mist, smoke, fog, etc. Return lines
         console.log("weatherId = " + weatherId + ", return 4, 804 (overcast clouds)");
         return 804;						// 900-99 is crazy atmospheric shit,
