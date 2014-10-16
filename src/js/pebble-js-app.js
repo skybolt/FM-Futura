@@ -1157,7 +1157,7 @@ function sendFMFutura() {
         ownName = ownName.substr(0, ownName.indexOf('('));        // trim off everything after the function name
 
 
-        if (debug_flag > 0) {
+        if (debug_flag > -1) {
             console.log("\n\n****** FM Futura JS Stored Values send block *******"
                         + "\nDay1: " + parseInt(localStorage.getItem("day1_cond")) + " " + localStorage.getItem("day1_temp") + " " + localStorage.getItem("day1_info")
                         + "\nDay2: " + parseInt(localStorage.getItem("day2_cond")) + " " + localStorage.getItem("day2_temp") + " " + localStorage.getItem("day2_info")
